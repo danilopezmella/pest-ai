@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+psycopg2
+python-dotenv
+pydantic
+#pydantic-ai
+supabase
+dspy

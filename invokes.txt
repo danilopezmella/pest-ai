@@ -1,0 +1,37 @@
+
+ Basic Search (default hybrid)
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "your question here" }'
+
+
+Semantic Search Only
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=semantic" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "your question here" }'
+
+ Keyword Search Only
+
+ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=keyword" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "your question here" }'
+
+ Hybrid Search (with custom alpha)
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=hybrid&alpha=0.7" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "your question here" }'
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=hybrid&alpha=0.3" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "what nulam and jacupdate and deforgive" }'
+
+ Hybrid Search with Keyword Filter
+
+ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=hybrid_filtered&alpha=0.3" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "what nulam and jacupdate and deforgive" }'
+
+ $body = @{question='What is PEST?'; user_id='test_user'} | ConvertTo-Json; Invoke-WebRequest -Uri 'http://localhost:8000/api/ask' -Method Post -Body $body -ContentType 'application/json'
+
+
+ BEST:
+
+  Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask?search_method=hybrid_filtered&alpha=0.3" -Method Post -ContentType "application/json" -Body '{ "user_id": "789", "question": "what is ies_num_reals" }'    
+
+
+
+SINGLE
+
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask_single" -Method Post -ContentType "application/json" -Body '{"user_id": "789","question": "what is lamforgive"}'

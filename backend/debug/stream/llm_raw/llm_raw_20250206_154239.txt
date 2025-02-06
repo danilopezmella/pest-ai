@@ -1,0 +1,34 @@
+
+
+=== Final Analysis Raw Output ===
+Question: What is a pest?
+Raw Content:
+1) Definition  
+- PEST is advanced software used for environmental model calibration and uncertainty analysis, designed to work with models to quantify uncertainties and support decision-making by identifying unlikely future events rather than predicting certain outcomes.  
+- File: PEST Model-Independent Parameter Estimation. User Manual Part I: PEST, SENSAN and Global Optimisers, Section: Summary.
+
+2) Possible Values  
+- Information not available in the provided content.
+
+3) Implications  
+- Information not available in the provided content.
+
+4) Practical Usage Notes  
+- No usage notes found in the provided content.
+
+5) Keywords  
+- No keywords found in the provided content.
+
+6) Follow-up References  
+- Doherty, J., 2015. Calibration and uncertainty analysis for complex environmental models. Published by Watermark Numerical Computing, Brisbane, Australia. 227pp, ISBN: 978-0-9943786-0-6.
+
+---
+
+**Follow-up Questions:**
+
+1. How does PEST handle the non-uniqueness inherent in model calibration processes?
+2. What methodologies does PEST provide for the exploration of pre- and post-calibration parameter uncertainty?
+3. Can you detail the process and benefits of using 64-bit versions of PEST for large problem sizes?
+4. What are the specific operational details of PEST in solving inverse problems, as mentioned in the general overview section?
+5. How does PEST's approach to parameter estimation differ from other software, and what makes it model-independent?
+=== End Subquestion {idx} ===

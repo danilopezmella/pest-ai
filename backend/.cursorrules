@@ -1,0 +1,215 @@
+# Pipeline: Question Processing and Response Generation
+
+# Pipeline: Question Processing and Response Generation
+
+1️⃣ **Receive User Question**  
+   - The frontend sends a user question to the backend.
+
+2️⃣ **Paraphrase and Split** (`@paraphrase_service.py`)  
+   - Improve readability of the question.  
+   - Split into sub-questions if necessary.  
+   - Generate variations for better retrieval.
+
+3️⃣ **Hybrid Search** (`@search_service_single.py`)  
+   - For each question:
+     ✔ Extract keywords from question
+     ✔ If keywords found:
+       - First filter documents by exact keyword match
+       - Then perform hybrid search on filtered set
+     ✔ If no keywords:
+       - Perform regular hybrid search:
+         1. Semantic search (get similarity scores)
+         2. Keyword search (get rank scores)
+         3. Combine results with alpha weight:
+            `combined_score = alpha * normalized_keyword + (1 - alpha) * normalized_semantic`
+         4. Sort by combined score
+
+4️⃣ **Results Format**
+   - Return top N results with:
+     - Document content and metadata
+     - Original scores (similarity, rank)
+     - Combined score
+     - Source indicators (primary/variation)
+
+
+
+
+# Example Output Format:
+
+
+   # Search Results for: what is pestmode
+
+Keywords: pestmode
+
+
+## Result 1
+
+Document ID: f29919ce4b31
+File: PEST Model-Independent Parameter Estimation. User Manual Part I: PEST, SENSAN and Global Optimisers
+Header: 8.3.1 The PESTMODE Variable
+Level: 3
+
+Content:
+```
+For PEST to run in “predictive analysis” mode the following must happen:
+   1. The PESTMODE variable in the “control data” section of the PEST control file must be set to “prediction”.
+   2. A “predictive analysis” section must be placed at the end of the PEST control file. This should be placed after the “prior information” section; if there is no prior information then the “prior information” section of the PEST control file can be omitted or simply left empty.
+   3. At least two observation groups must be defined, one of which should be named “predict”.
+   4. This “predict” group must contain only one member.
+```
+
+Self Summary: To run PEST in "predictive analysis" mode, set PESTMODE to "prediction", add a "predictive analysis" section (after "prior information"), define at least two observation groups (one named "predict" with only one member), and ensure a prior "estimation" run has been performed.
+Previous Summary: In "predictive analysis" mode, PEST maximizes/minimizes a prediction (in the "predict" group) while keeping the objective function ≤ Φ0 (requires a prior "estimation" run).  It uses the same parameters, transformations, and observations as the estimation run.  Restarting uses `/r`, `/j`, `/d`, or `/s` (parallel runs).  Change limits remain important.  Screen output shows prediction values per iteration.  Results include the optimal prediction and parameter values.
+Next Summary: The "predictive analysis" section (Figure 8.1) includes NPREDMAXMIN (1 for maximization, -1 for minimization), PREDNOISE (0 or 1, for prediction interval), PD0 (target objective function value), PD1 (acceptable objective function value), and PD2.  A "predict" group (one observation) is required.  The process requires a prior "estimation" run (Φmin).
+Header Summary Level 1: In "predictive analysis" mode, PEST optimizes predictions while maintaining the objective function below a threshold, considering post-calibration uncertainty. It requires accurate derivatives, a prior calibration process, and parameter consistency with the estimation run. Users can adjust Marquardt lambda, search parameters, and incorporate predictive noise for improved analysis.
+Header Summary Level 2: To run PEST in "predictive analysis" mode, set PESTMODE to "prediction", define observation groups, and perform a prior "estimation" run. Adjust Marquardt lambda iteratively to maximize/minimize predictions while meeting objective function criteria. Use line search, adjust search parameters, and set termination conditions based on prediction improvement. User intervention can modify line search variables.
+
+Scores:
+- Combined Score: 1.098
+- Keyword Score: 1.9
+- Semantic Score: 0.755
+- Original Rank: 0.0
+- Original Similarity: 0.755
+
+---
+
+## Result 2
+
+Document ID: 5c5b488c3e40
+File: PEST Model-Independent Parameter Estimation. User Manual Part I: PEST, SENSAN and Global Optimisers
+Header: 4.16 Predictive Analysis Section
+Level: 2
+
+Content:
+```
+If PEST is run in “predictive analysis” mode, (i.e. if the PESTMODE variable residing in the “control data” section of the PEST control file is set to “prediction”), then the PEST control file must have a “predictive analysis” section. Details are provided in chapter 8 of this manual.
+```
+
+Self Summary: A "predictive analysis" section is required in the PEST control file only when PESTMODE is set to "prediction" (Chapter 8).
+Previous Summary: Each prior information line includes PILBL, a prior information equation (PIFAC*PARNME or PIFAC*log(PARNME)), PIVAL (real), WEIGHT (real, ≥0), and OBGNME (≤12 characters).  Equations must be unique.  Use "&" for line continuation between items.  Covariance matrices (section 3.7) can replace weights in the objective function calculation.
+Next Summary: A "regularisation" section is required in the PEST control file only when PESTMODE is set to "regularisation" (Chapter 9).
+Header Summary Level 1: Figure 4.2 in PEST software displays control data section variables. The text details options for writing matrices, files, and parameters, including settings for matrix and file saving, operational modes, precision, derivative handling, and convergence criteria. Optional features like sensitivity reuse and LSQR algorithm for solving inverse problems are discussed.
+
+
+Scores:
+- Combined Score: 0.836
+- Keyword Score: 1.1
+- Semantic Score: 0.723
+- Original Rank: 0.0
+- Original Similarity: 0.723
+
+---
+
+## Result 3
+
+Document ID: 2394701f7a4d
+File: PEST Model-Independent Parameter Estimation. User Manual Part I: PEST, SENSAN and Global Optimisers
+Header: 4.18 Pareto Section
+Level: 2
+
+Content:
+```
+If PEST is run in “pareto” mode, (i.e. if the PESTMODE variable residing in the “control data” section of the PEST control file is set to “pareto”), then the PEST control file must have a “pareto” section. Details are provided in chapter 13 of this manual.
+```
+
+Self Summary: A "pareto" section is required in the PEST control file only when PESTMODE is set to "pareto" (Chapter 13).
+Previous Summary: A "regularisation" section is required in the PEST control file only when PESTMODE is set to "regularisation" (Chapter 9).
+Next Summary: In the "observation groups" section,  COVFLE specifies covariance matrix files (e.g., cov1.dat, cov2.dat) for groups, overriding individual weights. Equation 3.7.2 is then used to calculate the objective function. In "regularisation" mode (Chapter 9), a multiplier is applied to covariance matrices for "regul" groups.  Covariance matrices must be square, symmetric, and positive definite, and match the group size.
+Header Summary Level 1: Figure 4.2 in PEST software displays control data section variables. The text details options for writing matrices, files, and parameters, including settings for matrix and file saving, operational modes, precision, derivative handling, and convergence criteria. Optional features like sensitivity reuse and LSQR algorithm for solving inverse problems are discussed.
+
+
+Scores:
+- Combined Score: 0.834
+- Keyword Score: 1.1
+- Semantic Score: 0.72
+- Original Rank: 0.0
+- Original Similarity: 0.72
+
+---
+
+## Result 4
+
+Document ID: c5f0e10cf5f5
+File: PEST Model-Independent Parameter Estimation User Manual Part II: PEST Utility Support Software
+Header: 4.9 ADDREG2
+Level: 2
+
+Content:
+```
+ADDREG2 is similar to ADDREG1. However, unlike ADDREG1, ADDREG2 requires that the user provide a value for the target measurement objective function (i.e. PEST variable PHIMLIM) for inclusion in the “regularisation” section of the new PEST control file.
+   PHIMACCEPT is automatically set to 2 percent higher than this. Optionally, ADDREG2 allows a user to supply values for the FRACPHIM, IREGADJ, REGCONTINUE and UPTESTMIN control variables.
+   Another difference between ADDREG2 and ADDREG1 is that ADDREG2 insists that the PEST control file which it reads has PESTMODE set to “estimation”. Of course, PESTMODE is set to “regularisation” in the PEST control file which it writes.
+   ADDREG2 is run using the command:
+   addreg2 case1 case2 phimlim [fracphim] [iregadj] [continue] [hp]
+   where
+   - case1 is the filename base or full name of an existing PEST control file,
+   - case2 is the filename base or full name of the PEST control file which ADDREG2 must write,
+   - phimlim is the value for the target measurement objective function,
+   - fracphim (optional unless a value is supplied for IREGADJ) is the value for the FRACPHIM regularisation control variable,
+   - iregadj is the value for the IREGADJ regularisation control variable,
+   - “continue” (an optional variable) sets the REGCONTINUE flag to “continue” in the “regularisation” section of the new PEST control file, and
+   - “hp” (an optional variable) sets the UPTESTMIN control variable to 20 in the “control data” section of the new PEST control file.
+   If a value is not supplied for FRACPHIM, ADDREG2 sets it to 0.05. If a value is not supplied for IREGADJ, ADDREG2 provides its own value of 1. If a value of 4 is provided for IREGADJ through the command line, then ADDREG2 sets the NOPTREGADJ and REGWEIGHTRAT regularisation control variables to 1 and 20 respectively. If a value of 5 is provided for IREGADJ through the command line, then ADDREG2 sets the NOPTREGADJ, REGWEIGHTRAT and REGSINGTHRESH regularisation control variables to 1, 20 and 1.0E‑5 respectively.
+   If used, the word “continue” can be placed anywhere on the command line. It should NOT be enclosed in quotes.
+   If used, the word “hp” can be placed anywhere on the command line. It should NOT be enclosed in quotes. This instructs ADDREG2 to set the UPTESTMIN control variable to 20. This variable is used by PEST_HP. It instructs PEST_HP to devote at least 20 model runs to lambda‑testing during each iteration of the inversion process. This ensures that maximum use is made of the Jacobian matrix when trying to establish a parameter upgrade direction. Note, however, that ADDREG2 will not alter an UPTESTMIN value that is already supplied in the case1 input PEST control file. Nor will it provide a value for UPTESTMIN if a value for UPTESTLIM is provided in the case1 input PEST control file.
+   Note also that, in writing the new PEST control file, ADDREG2 sets JACUPDATE to 999. Thus it instructs PEST to employ Broyden Jacobian updating. However it will not alter the value of a JACUPDATE variable that is already supplied in the case1 input PEST control file.
+```
+
+Self Summary: ADDREG2 adds Tikhonov regularization, requiring a target measurement objective function (phimlim).  It sets PHIMACCEPT 2% higher than phimlim and optionally sets FRACPHIM (default 0.05), IREGADJ (default 1, sets NOPTREGADJ/REGWEIGHTRAT/REGSINGTHRESH if 4 or 5), REGCONTINUE ("continue"), and UPTESTMIN (to 20 if "hp" is used). PESTMODE is set to "regularisation" and JACUPDATE to 999 (unless already set).  It requires PESTMODE="estimation" in the input file.
+Previous Summary: ADDREG1 adds Tikhonov regularization to a PEST control file (case1), creating a new one (case2). It adds a prior information equation per parameter (initial value), sets weights to 1.0, creates "regul_" groups (IREGADJ=1), and sets PESTMODE to "regularisation," PHIMLIM=1.0E-10, PHIMACCEPT=1.05E-10, and FRACPHIM=0.1. Parameter group names ≤6 characters prevent name conflicts.
+Next Summary: ADDREG3 adds observations (one per adjustable parameter) to a PEST control file (case1), creating a new one (case2).  It requires PESTMODE="estimation" and no prior information.  New observations ("pv_" prefix, weight=weight) are in "pv_" or "regul_" groups ("yes"/"no" for areg).  It adds PAR2PAR files (par2par__.in, .tpl, .out, .ins) to the model input/output section and requires `par2par par2par__.in` in the model command line.  It's useful for preparing for RSI_HP.
+Header Summary Level 1: Figure 4.2 in PEST software displays control data section variables. The text details options for writing matrices, files, and parameters, including settings for matrix and file saving, operational modes, precision, derivative handling, and convergence criteria. Optional features like sensitivity reuse and LSQR algorithm for solving inverse problems are discussed.
+
+
+Scores:
+- Combined Score: 0.54
+- Keyword Score: 1.8
+- Semantic Score: 0.0
+- Original Rank: 0.0
+- Original Similarity: 0.0
+
+---
+
+## Result 5
+
+Document ID: 213e5751269f
+File: PEST Model-Independent Parameter Estimation. User Manual Part I: PEST, SENSAN and Global Optimisers
+Header: 9.2.1 Setting the Mode
+Level: 3
+
+Content:
+```
+To run PEST in “regularisation” mode, the variable PESTMODE on the second line of the “control data” section of the PEST control file must be set to “regularisation”.
+```
+
+Self Summary: To use PEST's "regularisation" mode, set the PESTMODE variable in the "control data" section to "regularisation".
+Previous Summary: In "regularisation" mode, PEST stops if NOPTMAX iterations elapse, the measurement objective function reaches the target (PHIMLIM, REGCONTINUE="nocontinue"), PHISTOPTHRESH is reached, parameter changes are minimal (RELPARSTP, NRELPAR), or objective function improvement is slow (PHIREDSTP, NPHISTP, NPHINORED, REGCONTINUE="continue").  User termination is often preferable, especially during early calibration attempts.
+Next Summary: In "regularisation" mode, observations/prior information belong to at least two groups:  "regul" groups (regularization observations) and others (measurement observations).  Regularization weights/covariance matrices are multiplied/divided by the regularization weight factor before objective function calculation.
+Header Summary Level 1: Tikhonov regularization in PEST enhances stability by reducing error variance and incorporating expert knowledge. Use IREGADJ, SVD, or LSQR with MAXSING and EIGTHRESH settings for stability. PEST stops after NOPTMAX iterations, reaching target objectives, minimal parameter changes, or slow improvement. Regularization mode categorizes observations into "regul" groups, adjusting weights with a regularization weight factor.
+Header Summary Level 2: To use PEST's "regularisation" mode, set PESTMODE to "regularisation" in the control data section. This mode categorizes observations into "regul" groups and others. Regularization weights are adjusted by the regularization weight factor. Key variables in the "regularisation" section include PHIMLIM, PHIMACCEPT, WFINIT, and others. PEST aims to minimize the regularization objective function while iterating until PHIMLIM is reached. Adjusting PHIMACCEPT, FRACPHIM, and other parameters influences optimization.
+
+Scores:
+- Combined Score: 0.526
+- Keyword Score: 0.0
+- Semantic Score: 0.752
+- Original Rank: 0.0
+- Original Similarity: 0.752
+
+---
+
+5️⃣ **Contextualized Answer Generation (LLM-based, Format TBD)**  
+   - For each sub-question:  
+     ✔ Use the **top 5 re-ranked, deduplicated documents** as context.  
+     ✔ Generate a **structured response** (final format yet to be decided: Markdown or other).  
+
+6️⃣ **Final Response Compilation**  
+   - Concatenate all individual answers.  
+   - Format as Markdown (or alternative structure).  
+   - Return the final response to the frontend.
+
+# Notes:
+- Currently, testing services only—no implementation yet.
+- AI will generate responses **only based on the provided documents**.
+- **Strict deduplication** is essential in re-ranking to prevent duplicate documents from different query variations.
+- **Documents and metadata (e.g., scores) are included after re-ranking, but no AI-generated analysis (e.g., chain of thought).**
+- The **final input format for AI is yet to be defined** (Markdown or another structure).
