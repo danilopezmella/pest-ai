@@ -29,7 +29,6 @@ class QuestionProcessingResult(BaseModel):
 question_processing_agent = Agent(
     "openai:gpt-4-turbo",
     result_type=QuestionProcessingResult,
-    api_key=OPENAI_API_KEY,  # Pass API key directly
     system_prompt=(
         "You are an AI assistant that processes user questions. "
         "Follow these steps EXACTLY for EVERY question:"

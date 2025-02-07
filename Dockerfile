@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy backend content to container
 COPY backend /app
 
+# Move .env file to src directory if it exists
+RUN if [ -f "/app/.env" ]; then mv /app/.env /app/src/.env; fi
+
 # Install dependencies without cache to reduce size
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
@@ -32,6 +35,12 @@ ENV PORT=8000 \
 
 # Create entrypoint script that will override with actual values
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'if [ -f ".env" ]; then' >> /app/entrypoint.sh && \
+    echo '  echo "Loading .env file..."' >> /app/entrypoint.sh && \
+    echo '  set -a' >> /app/entrypoint.sh && \
+    echo '  . ./.env' >> /app/entrypoint.sh && \
+    echo '  set +a' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
     echo 'export OPENAI_API_KEY="${OPENAI_API_KEY}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_URL="${SUPABASE_URL}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_KEY="${SUPABASE_KEY}"' >> /app/entrypoint.sh && \
