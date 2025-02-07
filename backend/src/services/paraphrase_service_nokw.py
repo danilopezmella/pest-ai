@@ -11,7 +11,11 @@ logger = logging.getLogger(__name__)
 
 # Cargar variables de entorno
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")  # Asegúrate de que la API key esté configurada
+
+# Verificar que la API key esté configurada
+if not os.getenv("OPENAI_API_KEY"):
+    logger.error("OPENAI_API_KEY environment variable is not set")
+    raise ValueError("OPENAI_API_KEY environment variable is not set")
 
 class QuestionProcessingResult(BaseModel):
     number_of_subquestions: int

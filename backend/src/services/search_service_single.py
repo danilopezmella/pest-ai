@@ -909,11 +909,11 @@ class SearchServiceSingle:
             # Print results summary
             print(f"\n🔄 Final Results:")
             print(f"📊 Total unique documents: {len(results_list)}")
-                for idx, doc in enumerate(results_list[:5], 1):
-                    print(f"\n=== Result {idx} ===")
-                    print(f"ID: {doc.get('chunk_id', 'MISSING')}")
-                    print(f"Combined Score: {doc['combined_score']:.3f}")
-                    print("---")
+            for idx, doc in enumerate(results_list[:5], 1):
+                print(f"\n=== Result {idx} ===")
+                print(f"ID: {doc.get('chunk_id', 'MISSING')}")
+                print(f"Combined Score: {doc['combined_score']:.3f}")
+                print("---")
 
             # Setup debug directory with absolute path
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -951,13 +951,13 @@ class SearchServiceSingle:
             print(f"\n📝 Markdown results saved to: {md_file}")
 
             # Format results for return
-                structured_results = {
-                    "semantic_search_results": results_list[:limit],
-                    "keyword_search_results": results_list[:limit],
-                    "markdown_file": md_file
+            structured_results = {
+                "semantic_search_results": results_list[:limit],
+                "keyword_search_results": results_list[:limit],
+                "markdown_file": md_file
                 }
                 
-                return structured_results
+            return structured_results
 
         except Exception as e:
             print(f"\n❌ Fatal error in hybrid_search_with_keywords_multi_rerank: {str(e)}")
