@@ -3,7 +3,7 @@ builder = "nixpacks"
 providers = ["python"]
 
 [deploy]
-startCommand = "echo '[DEPLOY] Starting...' && echo '[DEPLOY] PATH=' && echo $PATH && echo '[DEPLOY] Python=' && which python3 && cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "echo '[DEPLOY] Starting...' && which python3 && python3 -V && cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --log-level debug"
 restartPolicyType = "on_failure"
 
 [phases.setup]
@@ -16,10 +16,8 @@ nixPkgs = [
 [phases.install]
 cmds = [
     "echo '[INSTALL] Starting...'",
-    "echo '[INSTALL] PATH='",
-    "echo $PATH",
-    "echo '[INSTALL] Python='",
     "which python3",
+    "python3 -V",
     "echo '[INSTALL] Installing pip'",
     "python3 -m pip install --upgrade pip",
     "echo '[INSTALL] Installing requirements'",
@@ -29,7 +27,7 @@ cmds = [
 [phases.build]
 cmds = [
     "echo '[BUILD] Starting...'",
-    "echo '[BUILD] Python version='",
+    "which python3",
     "python3 -V",
     "cd backend"
 ]
