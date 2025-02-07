@@ -3,7 +3,7 @@ builder = "nixpacks"
 providers = ["python"]
 
 [deploy]
-startCommand = "cd backend && python311 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "cd backend && python3.11 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
 restartPolicyType = "on_failure"
 
 [phases.setup]
@@ -16,8 +16,8 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-    "python311 -m pip install --upgrade pip",
-    "cd backend && python311 -m pip install -r requirements.txt"
+    "python3.11 -m pip install --upgrade pip",
+    "cd backend && python3.11 -m pip install -r requirements.txt"
 ]
 
 [phases.build]
