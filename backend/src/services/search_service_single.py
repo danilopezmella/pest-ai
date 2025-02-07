@@ -6,6 +6,7 @@ from src.services.debug_service import DebugService
 from typing import List
 import json
 from datetime import datetime
+
 from src.services.format_service import format_result_to_md
 
 class SearchServiceSingle:
