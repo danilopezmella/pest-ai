@@ -322,8 +322,9 @@ class ResponseService:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             raw_output_file = os.path.join(debug_dir, f"llm_raw_{timestamp}.txt")
             
-            # Lista para acumular respuestas previas
-            previous_responses = []
+            # Lista para acumular respuestas
+            all_responses = []
+            all_contexts = []
             
             # Initial separator
             yield "\n\n"
@@ -333,19 +334,18 @@ class ResponseService:
             
             # Process each subquestion independently
             for idx, (md_file, subquestion) in enumerate(zip(markdown_files, subquestions), 1):
-                is_last_question = idx == len(subquestions)
-                print(f"\n🔍 Processing {'final' if is_last_question else ''} subquestion {idx} of {len(subquestions)}...")
+                print(f"\n🔍 Processing subquestion {idx} of {len(subquestions)}...")
                 print(f"Subquestion: {subquestion}")
                 
                 # Add separator between responses
                 if idx > 1:
                     yield "\n\n"
                     yield "=" * 80 + "\n"
-                    yield f"Moving to {'Final Analysis' if is_last_question else f'Question {idx}'} ({idx} of {len(subquestions)})\n"
+                    yield f"Moving to Question {idx} of {len(subquestions)}\n"
                     yield "=" * 80 + "\n\n"
                 
                 # Add subquestion header with visual elements
-                yield f"🔹 {'Final Analysis' if is_last_question else f'Question {idx}/{len(subquestions)}'}: {subquestion}\n"
+                yield f"🔹 Question {idx}/{len(subquestions)}: {subquestion}\n"
                 yield "=" * 80 + "\n\n"
                 
                 # Read markdown file content
@@ -356,6 +356,7 @@ class ResponseService:
                 print(f"✅ Reading markdown file: {md_file}")
                 with open(md_file, 'r', encoding='utf-8') as f:
                     content = f.read()
+                    all_contexts.append(content)
                     
                 # Save debug info for this subquestion
                 debug_dir = f"debug/stream/subq_{idx}"
@@ -366,32 +367,19 @@ class ResponseService:
                 )
                 print(f"📝 Debug info saved to: {debug_file}")
                 
-                # Preparar mensajes según si es la última pregunta o no
-                if is_last_question and previous_responses and len(subquestions) > 1:
-                    # Prompt especial para síntesis final usando el template
-                    synthesis_prompt = SYNTHESIS_PROMPT_TEMPLATE.format(
-                        main_question=question,
-                        separator='-' * 40,
-                        previous_responses=json.dumps(previous_responses, indent=2)
-                    )
-                    messages = [
-                        {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
-                        {"role": "user", "content": synthesis_prompt}
-                    ]
-                else:
-                    # Usar el template intermedio para preguntas no finales
-                    messages = [
-                        {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
-                        {"role": "user", "content": INTERMEDIATE_QUESTION_TEMPLATE.format(
-                            question_number=idx,
-                            total_questions=len(subquestions),
-                            question=subquestion,
-                            context=content
-                        )}
-                    ]
+                # Always use INTERMEDIATE_QUESTION_TEMPLATE for consistent detailed structure
+                messages = [
+                    {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
+                    {"role": "user", "content": INTERMEDIATE_QUESTION_TEMPLATE.format(
+                        question_number=idx,
+                        total_questions=len(subquestions),
+                        question=subquestion,
+                        context=content
+                    )}
+                ]
                 
                 # Generate response for this subquestion
-                print(f"🤖 Generating response for {'final analysis' if is_last_question else f'subquestion {idx}'}...")
+                print(f"🤖 Generating response for subquestion {idx}...")
                 response_stream = await self.openai_client.chat.completions.create(
                     model=self.model,
                     messages=messages,
@@ -401,29 +389,81 @@ class ResponseService:
                 )
                 
                 # Stream response for this subquestion
-                subq_content = []  # Acumular contenido de esta subquestion
+                subq_content = []
                 async for chunk in response_stream:
                     if chunk.choices[0].delta.content:
                         content = chunk.choices[0].delta.content
-                        subq_content.append(content)  # Guardar chunk
-                        yield content  # Enviar al frontend
+                        subq_content.append(content)
+                        yield content
                 
-                # Guardar contenido raw de esta subquestion
+                # Collect response for synthesis
+                all_responses.append({
+                    "question": subquestion,
+                    "response": "".join(subq_content)
+                })
+                
+                # Save raw content for debugging
                 with open(raw_output_file, "a", encoding="utf-8") as f:
-                    f.write(f"\n\n=== {'Final Analysis' if is_last_question else f'Subquestion {idx}'} Raw Output ===\n")
+                    f.write(f"\n\n=== Subquestion {idx} Raw Output ===\n")
                     f.write(f"Question: {subquestion}\n")
                     f.write("Raw Content:\n")
                     f.write("".join(subq_content))
-                    f.write("\n=== End Subquestion {idx} ===\n")
+                    f.write(f"\n=== End Subquestion {idx} ===\n")
+                    
+                print(f"✅ Completed response for subquestion {idx}")
+            
+            # Add final synthesis if there are multiple questions
+            if len(subquestions) > 1:
+                yield "\n\n"
+                yield "=" * 80 + "\n"
+                yield "🔄 Generating Final Synthesis\n"
+                yield "=" * 80 + "\n\n"
                 
-                # Guardar respuesta para síntesis posterior si no es la última
-                if not is_last_question:
-                    previous_responses.append({
-                        "question": subquestion,
-                        "response": "".join(subq_content)
-                    })
-                        
-                print(f"✅ Completed response for {'final analysis' if is_last_question else f'subquestion {idx}'}")
+                # Prepare synthesis prompt
+                synthesis_prompt = f"""
+Based on all the previous responses and context, please provide a comprehensive synthesis that:
+
+1. Identifies key relationships and connections between the topics discussed
+2. Highlights common patterns or principles across all questions
+3. Summarizes the main findings for each topic
+4. Explains how these concepts work together in the system
+
+Original Question: {question}
+
+Previous Responses:
+{json.dumps(all_responses, indent=2)}
+
+All Available Context:
+{json.dumps(all_contexts, indent=2)}
+
+Please structure your synthesis as follows:
+
+1. Key Relationships and Connections
+2. Common Patterns and Principles
+3. Summary of Main Findings
+4. System Integration
+5. Final Insights
+"""
+                
+                # Generate synthesis
+                synthesis_messages = [
+                    {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
+                    {"role": "user", "content": synthesis_prompt}
+                ]
+                
+                print("🤖 Generating final synthesis...")
+                synthesis_stream = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=synthesis_messages,
+                    temperature=0.3,
+                    max_tokens=4000,
+                    stream=True
+                )
+                
+                # Stream synthesis response
+                async for chunk in synthesis_stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
             
             # Final separator
             yield "\n\n"
