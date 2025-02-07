@@ -10,8 +10,8 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/ask" -Method Post -ContentType
 BACKEND
 
 backend\.venv\Scripts\Activate.ps1
- cd C:\code\n8n\backend; python -m src.main
-
+cd C:\code\n8n\backend; python -m src.main
+cd C:\code\n8n\frontend; npm run dev
 
 uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 

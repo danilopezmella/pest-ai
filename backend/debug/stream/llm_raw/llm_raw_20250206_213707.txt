@@ -1,0 +1,42 @@
+
+
+=== Final Analysis Raw Output ===
+Question: What are the implications of using a risk-averse setting greater than 0.5 on the optimization outcome in PESTPP-OPT?
+Raw Content:
+Direct Answer First:
+The provided documentation does not explicitly discuss the implications of using a risk-averse setting greater than 0.5 on the optimization outcome in PESTPP-OPT. Therefore, based on the available content, it is not possible to directly answer the question regarding the specific effects or consequences of employing a risk-averse setting above 0.5 in PESTPP-OPT's optimization process.
+
+Detailed Analysis:
+
+1) **Definition/Overview**
+   - Not applicable for this topic as the documentation provided does not include information on the implications of using a risk-averse setting greater than 0.5 in PESTPP-OPT.
+   - Source: Not applicable.
+
+2) **Possible Values**
+   - Not applicable for this topic as the documentation does not discuss the range or implications of risk-averse settings in PESTPP-OPT.
+   - Source: Not applicable.
+
+3) **Implications**
+   - Information not available in the provided content. The documentation does not detail the implications or effects of using a risk-averse setting greater than 0.5 on the optimization outcome in PESTPP-OPT.
+   - Source: Not applicable.
+
+4) **Practical Usage Notes**
+   - No usage notes found in the provided content regarding the practical application or considerations of employing a risk-averse setting greater than 0.5 in PESTPP-OPT.
+   - Source: Not applicable.
+
+5) **Keywords**
+   - No keywords found in the provided content.
+
+Follow-up Questions:
+1. Question: What are the recognized methods for global sensitivity analysis supported by PESTPP-SEN?
+   Source: File: PEST Model-Independent Parameter Estimation: PEST++ a Software Suite for Parameter Estimation, Uncertainty Analysis, Management Optimization and Sensitivity Analysis, Section: 7.1.1 General
+   Available Information: "PESTPP-SEN currently supports two GSA methods. These are the Method of Morris (Morris, 1991), with extensions proposed by Campolongo et al (2005), and the Method of Sobol (Sobol, 2001)."
+
+2. Question: How does PESTPP-OPT handle constraints that are applied to model outputs?
+   Source: File: PEST Model-Independent Parameter Estimation: PEST++ a Software Suite for Parameter Estimation, Uncertainty Analysis, Management Optimization and Sensitivity Analysis, Section: 8.2.4 Constraints
+   Available Information: "Constraints can be applied on model outputs (read from model output files using instruction files) or on prior information equations. PESTPP-OPT allows constraints to be either “less than” or “greater than” constraints; the latter are internally reformulated as “less than” constraints..."
+
+3. Question: What is the significance of the *opt_obj_func* variable in PESTPP-OPT's optimization process?
+   Source: File: PEST Model-Independent Parameter Estimation: PEST++ a Software Suite for Parameter Estimation, Uncertainty Analysis, Management Optimization and Sensitivity Analysis, Section: Previous Summary
+   Available Information: "*opt_obj_func* (prior information equation, file—Figure 8.1, or observation) defines PESTPP-OPT's objective function (Equation 8.4). *opt_direction* ("min" or "max") sets optimization direction."
+=== End Subquestion {idx} ===

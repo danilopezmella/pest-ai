@@ -54,7 +54,7 @@ export const ChatTest: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col p-4 bg-gray-900 text-white">
+    <div className="h-screen flex flex-col p-4 bg-gray-900 text-white font-roboto">
       {/* Messages Area */}
       <div className="flex-grow overflow-y-auto mb-4 space-y-4">
         {messages.map((msg, idx) => (

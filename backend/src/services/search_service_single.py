@@ -137,6 +137,7 @@ class SearchServiceSingle:
                     if add_to_combined_results(doc, "semantic"):
                         doc['normalized_semantic'] = doc.get('normalized_similarity', 0)
                         doc['normalized_keyword'] = 0
+                        doc['found_in'] = ['original']
                         combined_results[doc['chunk_id']] = doc
                 
                 # Process keyword results
@@ -145,8 +146,11 @@ class SearchServiceSingle:
                         doc['normalized_keyword'] = doc.get('normalized_rank', 0)
                         if doc['chunk_id'] in combined_results:
                             combined_results[doc['chunk_id']]['normalized_keyword'] = doc.get('normalized_rank', 0)
+                            if 'original' not in combined_results[doc['chunk_id']]['found_in']:
+                                combined_results[doc['chunk_id']]['found_in'].append('original')
                         else:
                             doc['normalized_semantic'] = 0
+                            doc['found_in'] = ['original']
                             combined_results[doc['chunk_id']] = doc
 
                 if skipped_docs > 0:
@@ -245,7 +249,77 @@ class SearchServiceSingle:
             # If no keywords provided, fall back to regular hybrid search
             if not keywords:
                 print("\n⚠️ No keywords provided, falling back to regular hybrid search")
-                return self.hybrid_search(question, limit, alpha)
+                
+                # Initialize combined results
+                all_results = {}
+                
+                # Process original question first
+                print(f"\n🔍 Processing original question: '{question}'")
+                results = self.hybrid_search(question, limit, alpha)
+                for doc in results.get("semantic_search_results", []):
+                    doc['found_in'] = ['original']
+                    all_results[doc['chunk_id']] = doc
+                
+                # Process each variation if any
+                if variations:
+                    for i, variation in enumerate(variations, 1):
+                        variation_key = f"variation_{i}"
+                        print(f"\n🔍 Processing variation {i}: '{variation}'")
+                        var_results = self.hybrid_search(variation, limit, alpha)
+                        for doc in var_results.get("semantic_search_results", []):
+                            if doc['chunk_id'] in all_results:
+                                if doc.get('combined_score', 0) > all_results[doc['chunk_id']].get('combined_score', 0):
+                                    all_results[doc['chunk_id']] = doc
+                                if variation_key not in all_results[doc['chunk_id']]['found_in']:
+                                    all_results[doc['chunk_id']]['found_in'].append(variation_key)
+                            else:
+                                doc['found_in'] = [variation_key]
+                                all_results[doc['chunk_id']] = doc
+                
+                # Convert to list and sort by score
+                results_list = list(all_results.values())
+                results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
+                
+                # Setup debug directory with absolute path
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                debug_dir = os.path.join(current_dir, "..", "..", "debug", "rerank")
+                os.makedirs(debug_dir, exist_ok=True)
+                
+                # Create markdown directory
+                md_dir = os.path.join(debug_dir, "markdown")
+                os.makedirs(md_dir, exist_ok=True)
+                
+                # Use request timestamp if provided, otherwise generate new one
+                timestamp = request_timestamp or datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                # Generate markdown file for this subquestion
+                md_content = f"# Search Results for: {question}\n\n"
+                md_content += f"Keywords: None\n\n"
+                
+                # Add variations section if there are any
+                if variations:
+                    md_content += f"## Variations\n"
+                    for i, variation in enumerate(variations, 1):
+                        md_content += f"{i}. {variation}\n"
+                    md_content += "\n"
+                
+                for idx, doc in enumerate(results_list[:5], 1):
+                    # Format result using format_service
+                    formatted_result = format_result_to_md(doc)
+                    md_content += f"\n{formatted_result}\n"
+
+                # Save markdown file for this subquestion
+                subq_suffix = f"_subquestion_{subquestion_number}" if subquestion_number is not None else ""
+                md_file = os.path.join(md_dir, f"results_{timestamp}{subq_suffix}.md")
+                with open(md_file, "w", encoding="utf-8") as f:
+                    f.write(md_content)
+                print(f"\n📝 Markdown results saved to: {md_file}")
+                
+                return {
+                    "semantic_search_results": results_list[:5],
+                    "keyword_search_results": results_list[:5],
+                    "markdown_file": md_file
+                }
 
             print(f"\n🔍 Processing original query: '{question}'")
             print(f"🔍 With {len(variations)} variations")
@@ -313,6 +387,17 @@ class SearchServiceSingle:
                     )
                     self._merge_results(all_results, results)
 
+                # Calculate combined scores and add debug factors
+                for doc in all_results.values():
+                    doc['combined_score'] = alpha * doc.get('normalized_keyword', 0) + (1 - alpha) * doc.get('normalized_semantic', 0)
+                    doc['debug_factors'] = {
+                        "semantic_score": doc.get('normalized_semantic', 0),
+                        "keyword_score": doc.get('normalized_keyword', 0),
+                        "combined_score": doc['combined_score'],
+                        "final_score": doc['combined_score'],
+                        "length_factor": 1.0
+                    }
+                
                 # Convert to list and sort by score
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
@@ -381,6 +466,7 @@ class SearchServiceSingle:
             for doc in semantic_response.data:
                 doc['normalized_semantic'] = doc.get('normalized_similarity', 0)
                 doc['normalized_keyword'] = 0
+                doc['found_in'] = ['original']
                 combined_results[doc['chunk_id']] = doc
         
         # Process keyword results
@@ -392,6 +478,7 @@ class SearchServiceSingle:
                 else:
                     doc['normalized_keyword'] = doc.get('normalized_rank', 0)
                     doc['normalized_semantic'] = 0
+                    doc['found_in'] = ['original']
                     combined_results[doc['chunk_id']] = doc
         
         # Calculate combined scores and add debug factors
@@ -501,6 +588,17 @@ class SearchServiceSingle:
                         )
                         self._merge_results(all_results, results)
 
+                # Calculate combined scores and add debug factors
+                for doc in all_results.values():
+                    doc['combined_score'] = alpha * doc.get('normalized_keyword', 0) + (1 - alpha) * doc.get('normalized_semantic', 0)
+                    doc['debug_factors'] = {
+                        "semantic_score": doc.get('normalized_semantic', 0),
+                        "keyword_score": doc.get('normalized_keyword', 0),
+                        "combined_score": doc['combined_score'],
+                        "final_score": doc['combined_score'],
+                        "length_factor": 1.0
+                    }
+                
                 # Convert to list and sort by score
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
@@ -573,7 +671,36 @@ class SearchServiceSingle:
             # If no keywords provided, fall back to regular hybrid search
             if not keywords:
                 print("\n⚠️ No keywords provided, falling back to regular hybrid search")
+                
+                # Initialize combined results
+                all_results = {}
+                
+                # Process original question first
+                print(f"\n🔍 Processing original question: '{question}'")
                 results = self.hybrid_search(question, limit, alpha)
+                for doc in results.get("semantic_search_results", []):
+                    doc['found_in'] = ['original']
+                    all_results[doc['chunk_id']] = doc
+                
+                # Process each variation if any
+                if variations:
+                    for i, variation in enumerate(variations, 1):
+                        variation_key = f"variation_{i}"
+                        print(f"\n🔍 Processing variation {i}: '{variation}'")
+                        var_results = self.hybrid_search(variation, limit, alpha)
+                        for doc in var_results.get("semantic_search_results", []):
+                            if doc['chunk_id'] in all_results:
+                                if doc.get('combined_score', 0) > all_results[doc['chunk_id']].get('combined_score', 0):
+                                    all_results[doc['chunk_id']] = doc
+                                if variation_key not in all_results[doc['chunk_id']]['found_in']:
+                                    all_results[doc['chunk_id']]['found_in'].append(variation_key)
+                            else:
+                                doc['found_in'] = [variation_key]
+                                all_results[doc['chunk_id']] = doc
+                
+                # Convert to list and sort by score
+                results_list = list(all_results.values())
+                results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
                 
                 # Setup debug directory with absolute path
                 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -591,7 +718,14 @@ class SearchServiceSingle:
                 md_content = f"# Search Results for: {question}\n\n"
                 md_content += f"Keywords: None\n\n"
                 
-                for idx, doc in enumerate(results.get("semantic_search_results", [])[:5], 1):
+                # Add variations section if there are any
+                if variations:
+                    md_content += f"## Variations\n"
+                    for i, variation in enumerate(variations, 1):
+                        md_content += f"{i}. {variation}\n"
+                    md_content += "\n"
+                
+                for idx, doc in enumerate(results_list[:5], 1):
                     # Format result using format_service
                     formatted_result = format_result_to_md(doc)
                     md_content += f"\n{formatted_result}\n"
@@ -604,8 +738,8 @@ class SearchServiceSingle:
                 print(f"\n📝 Markdown results saved to: {md_file}")
                 
                 return {
-                    "semantic_search_results": results.get("semantic_search_results", [])[:5],
-                    "keyword_search_results": results.get("semantic_search_results", [])[:5],
+                    "semantic_search_results": results_list[:5],
+                    "keyword_search_results": results_list[:5],
                     "markdown_file": md_file
                 }
 
@@ -647,7 +781,15 @@ class SearchServiceSingle:
             # If no documents found with keywords, fall back to regular search
             if not all_filtered_ids:
                 print(f"\n⚠️ No documents found matching keywords, falling back to regular hybrid search")
-                return self.hybrid_search(question, limit, alpha)
+                return self.hybrid_search_with_keywords_multi_rerank(
+                    question=question,
+                    keywords=[],
+                    variations=variations,
+                    limit=limit,
+                    alpha=alpha,
+                    subquestion_number=subquestion_number,
+                    request_timestamp=request_timestamp
+                )
 
             # Convert set back to list for further processing
             filtered_ids = list(all_filtered_ids)
@@ -752,18 +894,17 @@ class SearchServiceSingle:
             # Calculate combined scores and add debug factors
             for doc in all_results.values():
                 doc['combined_score'] = alpha * doc.get('normalized_keyword', 0) + (1 - alpha) * doc.get('normalized_semantic', 0)
-                # Add debug factors
                 doc['debug_factors'] = {
                     "semantic_score": doc.get('normalized_semantic', 0),
                     "keyword_score": doc.get('normalized_keyword', 0),
                     "combined_score": doc['combined_score'],
-                    "final_score": doc['combined_score'],  # Same as combined_score since we're not doing additional reranking
-                    "length_factor": 1.0  # Not applying length penalty
+                    "final_score": doc['combined_score'],
+                    "length_factor": 1.0
                 }
 
-            # Convert to list and sort
-                results_list = list(all_results.values())
-                results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
+            # Convert to list and sort by score
+            results_list = list(all_results.values())
+            results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
 
             # Print results summary
             print(f"\n🔄 Final Results:")
@@ -809,11 +950,11 @@ class SearchServiceSingle:
                 f.write(md_content)
             print(f"\n📝 Markdown results saved to: {md_file}")
 
-        # Format results for return
+            # Format results for return
             structured_results = {
-                "semantic_search_results": results_list[:limit],
-        "keyword_search_results": results_list[:limit],
-        "markdown_file": md_file
+                    "semantic_search_results": results_list[:limit],
+                    "keyword_search_results": results_list[:limit],
+                    "markdown_file": md_file
                 }
                 
             return structured_results

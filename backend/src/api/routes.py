@@ -6,7 +6,7 @@ from services.paraphrase_service_nokw import process_question
 from services.search_service import SearchService
 from services.search_service_single import SearchServiceSingle
 from services.keyword_service import detect_keywords
-from services.enhanced_search_service import enhanced_search
+#from services.enhanced_search_service import enhanced_search
 from services.response_service import ResponseService
 from typing import Optional, Literal
 import asyncio

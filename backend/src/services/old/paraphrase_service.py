@@ -1,6 +1,5 @@
 import os
 import logging
-#import dspy
 from pydantic_ai import Agent
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -14,15 +13,6 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")  # Ensure the API key is set
 
-
-
-class QuestionProcessingResult(BaseModel):
-    number_of_subquestions: int
-    improved_sub_questions: list[str]
-    variations: list[list[str]]
-    keywords_found: list[list[str]]
-
-
 class QuestionProcessingResult(BaseModel):
     number_of_subquestions: int
     improved_sub_questions: list[str]
@@ -31,7 +21,7 @@ class QuestionProcessingResult(BaseModel):
 
 # Define Pydantic AI agent
 question_processing_agent = Agent(
-    "openai:gpt-4-turbo",
+    "openai:gpt-4",
     result_type=QuestionProcessingResult,
     system_prompt=(
        "You are an AI assistant that processes user questions. "

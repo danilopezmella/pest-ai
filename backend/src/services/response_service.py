@@ -16,7 +16,8 @@ from loguru import logger
 from src.config.prompts import (
     RESPONSE_SYSTEM_PROMPT, 
     RESPONSE_USER_PROMPT,
-    SYNTHESIS_PROMPT_TEMPLATE
+    SYNTHESIS_PROMPT_TEMPLATE,
+    INTERMEDIATE_QUESTION_TEMPLATE
 )
 
 # Configure logging
@@ -380,17 +381,16 @@ class ResponseService:
                     )
                     messages = [
                         {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
-                        {"role": "user", "content": RESPONSE_USER_PROMPT.format(
-                            query=f"{subquestion}\n\n{synthesis_prompt}",
-                            context=content
-                        )}
+                        {"role": "user", "content": synthesis_prompt}
                     ]
                 else:
-                    # Prompt normal para preguntas no finales
+                    # Usar el template intermedio para preguntas no finales
                     messages = [
                         {"role": "system", "content": RESPONSE_SYSTEM_PROMPT},
-                        {"role": "user", "content": RESPONSE_USER_PROMPT.format(
-                            query=subquestion,
+                        {"role": "user", "content": INTERMEDIATE_QUESTION_TEMPLATE.format(
+                            question_number=idx,
+                            total_questions=len(subquestions),
+                            question=subquestion,
                             context=content
                         )}
                     ]

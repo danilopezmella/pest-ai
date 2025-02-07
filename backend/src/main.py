@@ -16,8 +16,8 @@ app = FastAPI()
 # Add CORS middleware with more permissive configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development
-    allow_credentials=False,  # Set to False since we're not using credentials
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -28,4 +28,4 @@ app.include_router(search_router, prefix="/api/search")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)  # Allow external connections
