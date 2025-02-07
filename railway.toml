@@ -1,13 +1,21 @@
 [build]
 builder = "nixpacks"
+providers = ["python"]
 
 [deploy]
-startCommand = "cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "/usr/bin/python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
 restartPolicyType = "on_failure"
 
 [phases.setup]
 nixPkgs = ["python311"]
-aptPkgs = ["python3-pip", "python3-dev", "build-essential"]
+aptPkgs = ["python3", "python3-pip", "python3-dev", "build-essential"]
+path = "/usr/local/bin:/usr/bin:/bin"
 
 [phases.install]
-cmds = ["python3 -m pip install --upgrade pip", "pip install -r backend/requirements.txt"] 
+cmds = [
+    "/usr/bin/python3 -m pip install --upgrade pip",
+    "/usr/bin/python3 -m pip install -r backend/requirements.txt"
+]
+
+[phases.build]
+cmds = ["cd backend"] 
