@@ -1,33 +1,49 @@
 [build]
 builder = "nixpacks"
-providers = ["python"]
+buildCommand = "nix-env -iA nixpkgs.python311"
 
 [deploy]
-startCommand = "ls -la && echo 'Python location:' && which python3 || true && echo 'Python version:' && python3 -V || true && echo 'Starting server...' && cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --log-level debug"
+startCommand = """
+echo '=== SYSTEM STATE ===' &&
+find / -name python3 2>/dev/null &&
+echo '=== NIX PATHS ===' &&
+find /nix -name python3 2>/dev/null &&
+echo '=== DIRECTORIES ===' &&
+ls -la /nix/var/nix/profiles/default/bin/ 2>/dev/null &&
+ls -la /nix/store/ 2>/dev/null &&
+echo '=== TRYING PYTHON ===' &&
+/nix/var/nix/profiles/default/bin/python3 -V &&
+cd backend && /nix/var/nix/profiles/default/bin/python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --log-level debug
+"""
 restartPolicyType = "on_failure"
 
 [phases.setup]
 nixPkgs = [
-    "python3",
-    "python3Packages.pip",
-    "python3Packages.uvicorn"
+    "python311",
+    "python311Packages.pip",
+    "python311Packages.uvicorn",
+    "python311Full"
 ]
 
 [phases.install]
 cmds = [
-    "ls -la",
-    "echo 'Python location:' && which python3 || true",
-    "echo 'Python version:' && python3 -V || true",
-    "echo 'Installing pip...'",
-    "python3 -m pip install --upgrade pip || true",
-    "echo 'Installing requirements...'",
-    "cd backend && python3 -m pip install -r requirements.txt"
+    "echo '=== FINDING PYTHON ===' ",
+    "find / -name python3 2>/dev/null || echo 'No python3 found'",
+    "find /nix -name python3 2>/dev/null || echo 'No python3 found'",
+    "echo '=== NIX STORE ===' ",
+    "ls -la /nix/store/*python* 2>/dev/null || echo 'No python in nix store'",
+    "echo '=== NIX PROFILE ===' ",
+    "ls -la /nix/var/nix/profiles/default/bin/python* 2>/dev/null || echo 'No python in nix profile'",
+    "echo '=== TRYING PIP ===' ",
+    "/nix/var/nix/profiles/default/bin/python3 -m pip install --upgrade pip || echo 'Pip install failed'",
+    "cd backend && /nix/var/nix/profiles/default/bin/python3 -m pip install -r requirements.txt || echo 'Requirements install failed'"
 ]
 
 [phases.build]
 cmds = [
-    "ls -la",
-    "echo 'Python location:' && which python3 || true",
-    "echo 'Python version:' && python3 -V || true",
+    "echo '=== FINAL CHECK ===' ",
+    "find / -name python3 2>/dev/null || echo 'No python3 found'",
+    "ls -la /nix/var/nix/profiles/default/bin/ || echo 'No nix profile bin'",
+    "/nix/var/nix/profiles/default/bin/python3 -V || echo 'Python version failed'",
     "cd backend"
 ]
