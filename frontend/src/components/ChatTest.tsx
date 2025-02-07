@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+// Usar variable de entorno o fallback a localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 export const ChatTest: React.FC = () => {
   const [messages, setMessages] = useState<{text: string, isBot: boolean}[]>([]);
   const [messageInput, setMessageInput] = useState('');
@@ -15,7 +18,7 @@ export const ChatTest: React.FC = () => {
     setStreamContent('');
 
     try {
-      const response = await fetch("http://localhost:8000/api/search/generate_custom_response_stream", {
+      const response = await fetch(`${API_BASE_URL}/api/search/generate_custom_response_stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: messageInput }),
