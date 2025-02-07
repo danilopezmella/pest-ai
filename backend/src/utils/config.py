@@ -9,17 +9,23 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
+# Debug: Print environment variables (safely)
+logger.info("Checking environment variables in config.py...")
+logger.info(f"OPENAI_API_KEY exists: {bool(os.environ.get('OPENAI_API_KEY'))}")
+logger.info(f"SUPABASE_URL exists: {bool(os.environ.get('SUPABASE_URL'))}")
+logger.info(f"SUPABASE_KEY exists: {bool(os.environ.get('SUPABASE_KEY'))}")
+
 # API Keys - No default values to force explicit configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     logger.warning("⚠️ OPENAI_API_KEY is not configured. Application may not work properly.")
 
 # Supabase config
-SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
 if not SUPABASE_URL:
     logger.warning("⚠️ SUPABASE_URL is not configured. Application may not work properly.")
 
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 if not SUPABASE_KEY:
     logger.warning("⚠️ SUPABASE_KEY is not configured. Application may not work properly.")
 
