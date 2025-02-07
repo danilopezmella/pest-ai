@@ -5,8 +5,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Keys con valores por defecto para pruebas
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-1234567890")  # Reemplazar con tu API key real
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # No default value to force setting it
 
 # Supabase config
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-supabase-url.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-supabase-key")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# App config
+PORT = int(os.getenv("PORT", "8000"))
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

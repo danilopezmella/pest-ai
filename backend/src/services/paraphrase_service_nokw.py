@@ -4,6 +4,7 @@ import asyncio
 from pydantic_ai import Agent
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from utils.config import OPENAI_API_KEY
 
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG)
@@ -12,9 +13,8 @@ logger = logging.getLogger(__name__)
 # Cargar variables de entorno
 load_dotenv()
 
-# Configurar API key con valor por defecto para pruebas
-if not os.getenv("OPENAI_API_KEY"):
-    os.environ["OPENAI_API_KEY"] = "sk-1234567890"  # Reemplazar con tu API key real
+# Usar la configuración centralizada
+if OPENAI_API_KEY == "sk-1234567890":  # Si es el valor por defecto
     logger.warning("Using default test API key - replace with your actual key for production")
 
 class QuestionProcessingResult(BaseModel):
