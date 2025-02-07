@@ -15,3 +15,4 @@ ENV PORT=8000
 
 # Comando para iniciar la aplicación
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "${PORT}"] 
+
