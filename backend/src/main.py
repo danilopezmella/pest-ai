@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # Register the routers
-app.include_router(router)
+#app.include_router(router)
 app.include_router(search_router, prefix="/api/search")
 
 if __name__ == "__main__":
