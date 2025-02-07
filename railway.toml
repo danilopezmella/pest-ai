@@ -3,19 +3,3 @@ dockerfile = "Dockerfile"
 
 [deploy]
 restartPolicyType = "on_failure"
-
-[phases.install]
-cmds = [
-    "python -m pip install --upgrade pip",
-    "cd backend && python -m pip install -r requirements.txt"
-]
-
-[phases.build]
-cmds = [
-    "echo '=== FINAL CHECK ==='",
-    "which python || echo 'No python found'",
-    "which python3 || echo 'No python3 found'",
-    "ls -la /nix/store/ | grep python || echo 'No python in nix store'",
-    "python -V || echo 'Python execution failed'",
-    "cd backend"
-]

@@ -2,16 +2,16 @@
 FROM python:3.11-slim
 
 # Establece el directorio de trabajo
-WORKDIR /app
+WORKDIR /app/backend
 
 # Copia los archivos necesarios
-COPY backend/requirements.txt backend/requirements.txt
+COPY backend/requirements.txt requirements.txt
 
 # Instala las dependencias
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia el resto del código
-COPY backend backend/
+COPY backend .
 
 # Comando para iniciar la aplicación
-CMD ["python", "-m", "uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"] 
