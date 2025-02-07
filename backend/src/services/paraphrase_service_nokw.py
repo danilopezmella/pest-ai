@@ -2,16 +2,15 @@ import os
 import logging
 import asyncio
 from pydantic_ai import Agent
-from dotenv import load_dotenv
 from pydantic import BaseModel
-from utils.config import OPENAI_API_KEY
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv(override=False)
+# Read API key directly from environment
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+logger.info(f"Direct check - OPENAI_API_KEY exists: {bool(OPENAI_API_KEY)}")
 
 # Verify API key
 if not OPENAI_API_KEY:
@@ -30,6 +29,7 @@ class QuestionProcessingResult(BaseModel):
 question_processing_agent = Agent(
     "openai:gpt-4-turbo",
     result_type=QuestionProcessingResult,
+    api_key=OPENAI_API_KEY,  # Pass API key directly
     system_prompt=(
         "You are an AI assistant that processes user questions. "
         "Follow these steps EXACTLY for EVERY question:"

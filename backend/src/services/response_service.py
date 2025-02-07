@@ -3,16 +3,10 @@ import json
 import os
 from typing import Dict, List, Any, Generator, Union
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
 import sys
-from utils.config import OPENAI_API_KEY
-import json
-import os
-from datetime import datetime  # Agregar esta línea
+from datetime import datetime
 from typing import List, Dict
-
 from loguru import logger
-
 from config.prompts import (
     RESPONSE_SYSTEM_PROMPT, 
     RESPONSE_USER_PROMPT,
@@ -24,8 +18,9 @@ from config.prompts import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv(override=False)
+# Read API key directly from environment
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+logger.info(f"Direct check - OPENAI_API_KEY exists: {bool(OPENAI_API_KEY)}")
 
 class ResponseService:
     """Service for generating responses using OpenAI's API directly"""

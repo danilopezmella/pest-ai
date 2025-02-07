@@ -7,7 +7,7 @@ from pathlib import Path
 project_root = str(Path(__file__).parent.parent.parent)
 sys.path.append(project_root)
 
-from src.services.response_service import ResponseService
+from services.response_service import ResponseService
 
 async def main():
     """Main function to test response generation"""
