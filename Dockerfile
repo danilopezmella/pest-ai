@@ -1,17 +1,17 @@
-# Usa una imagen oficial de Python 3.11
+# Usa una imagen ligera de Python 3.11
 FROM python:3.11-slim
 
 # Establece el directorio de trabajo
-WORKDIR /app/backend
+WORKDIR /app
 
-# Copia los archivos necesarios
-COPY backend/requirements.txt requirements.txt
+# Copia el contenido de la carpeta "backend" al contenedor
+COPY backend /app
 
-# Instala las dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+# Instala las dependencias sin cache para reducir el tamaño
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copia el resto del código
-COPY backend .
+# Variable de entorno para el puerto
+ENV PORT=8000
 
 # Comando para iniciar la aplicación
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "${PORT}"] 
