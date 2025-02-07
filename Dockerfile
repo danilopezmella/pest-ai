@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy backend content to container
 COPY backend /app
 
+# Copy keywords file to correct location
+RUN mkdir -p /app/src/data && cp /app/data/keywords.csv /app/src/data/keywords.csv || true
+
 # Move .env file to src directory if it exists
 RUN if [ -f "/app/.env" ]; then mv /app/.env /app/src/.env; fi
 

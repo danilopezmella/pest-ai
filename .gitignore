@@ -4,3 +4,4 @@ backend/debug
 .env
 backend/.env
 frontend/.env
+backend/backend
