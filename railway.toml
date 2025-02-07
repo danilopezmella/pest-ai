@@ -3,7 +3,18 @@ builder = "nixpacks"
 providers = ["python"]
 
 [deploy]
-startCommand = "cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
+startCommand = """
+echo '=== DEPLOYMENT ENVIRONMENT ===' &&
+pwd &&
+ls -la &&
+echo '=== PYTHON INFO ===' &&
+which python3 || echo 'python3 not found' &&
+which python || echo 'python not found' &&
+python3 -V || echo 'python3 -V failed' &&
+echo '=== PATH INFO ===' &&
+echo $PATH &&
+cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT
+"""
 restartPolicyType = "on_failure"
 
 [phases.setup]
@@ -15,9 +26,30 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-    "python3 -m pip install --upgrade pip",
-    "cd backend && python3 -m pip install -r requirements.txt"
+    "echo '=== INSTALL PHASE ENVIRONMENT ===' ",
+    "pwd",
+    "ls -la",
+    "echo '=== PYTHON LOCATIONS ===' ",
+    "which python3 || echo 'python3 not found'",
+    "which python || echo 'python not found'",
+    "ls -la /nix/store/*/bin/python* || echo 'No Python in /nix/store'",
+    "echo '=== SYSTEM INFO ===' ",
+    "uname -a",
+    "echo '=== PATH INFO ===' ",
+    "echo $PATH",
+    "echo '=== TRYING PIP INSTALL ===' ",
+    "python3 -m pip install --upgrade pip || echo 'pip upgrade failed'",
+    "cd backend && python3 -m pip install -r requirements.txt || echo 'requirements install failed'"
 ]
 
 [phases.build]
-cmds = ["cd backend"]
+cmds = [
+    "echo '=== BUILD PHASE ENVIRONMENT ===' ",
+    "pwd",
+    "ls -la",
+    "echo '=== PYTHON STATUS ===' ",
+    "which python3 || echo 'python3 not found'",
+    "python3 -V || echo 'python3 -V failed'",
+    "echo '=== BACKEND DIR ===' ",
+    "cd backend && ls -la"
+]
