@@ -11,8 +11,9 @@ COPY backend /app
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Variable de entorno para el puerto (asegurando que sea un número)
-ENV PORT 8000
+ENV PORT=8000
+ENV PYTHONPATH=/app/src
 
 # Comando para iniciar la aplicación
-CMD uvicorn src.main:app --host 0.0.0.0 --port $PORT 
+CMD cd /app/src && uvicorn main:app --host 0.0.0.0 --port $PORT 
 

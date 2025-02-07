@@ -9,7 +9,7 @@ src_path = str(Path(__file__).parent)
 if src_path not in sys.path:
     sys.path.append(src_path)
 
-from api.routes import router
+# Import routers
 from routes.search_routes import router as search_router
 
 app = FastAPI()
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     reload = os.getenv("ENVIRONMENT") != "production"
     
     uvicorn.run(
-        "src.main:app",
+        "main:app",  # Cambiado de src.main:app a main:app
         host="0.0.0.0", 
         port=port,
         reload=reload
