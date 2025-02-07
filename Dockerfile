@@ -27,10 +27,10 @@ ENV PORT=8000 \
     ENVIRONMENT=development \
     PYTHONUNBUFFERED=1
 
-# Command to start the application
-CMD /app/verify_env.sh && \
-    OPENAI_API_KEY=${OPENAI_API_KEY} \
-    SUPABASE_URL=${SUPABASE_URL} \
-    SUPABASE_KEY=${SUPABASE_KEY} \
+# Command to start the application with environment export
+CMD export OPENAI_API_KEY=${OPENAI_API_KEY} && \
+    export SUPABASE_URL=${SUPABASE_URL} && \
+    export SUPABASE_KEY=${SUPABASE_KEY} && \
+    /app/verify_env.sh && \
     python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
