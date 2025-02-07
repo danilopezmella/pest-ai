@@ -15,18 +15,26 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # - OPENAI_API_KEY
 # - SUPABASE_URL 
 # - SUPABASE_KEY
-ENV PORT=${PORT:-8000} \
+ENV OPENAI_API_KEY=$OPENAI_API_KEY \
+    SUPABASE_URL=$SUPABASE_URL \
+    SUPABASE_KEY=$SUPABASE_KEY \
+    PORT=$PORT \
     PYTHONPATH=/app/src \
-    ENVIRONMENT=${ENVIRONMENT:-production} \
-    DEBUG=${DEBUG:-False} \
-    LOG_LEVEL=${LOG_LEVEL:-INFO} \
-    OPENAI_API_KEY=${OPENAI_API_KEY} \
-    SUPABASE_URL=${SUPABASE_URL} \
-    SUPABASE_KEY=${SUPABASE_KEY}
+    ENVIRONMENT=production \
+    DEBUG=False \
+    LOG_LEVEL=INFO
 
 # Set working directory for application
 WORKDIR /app/src
 
-# Command to start the application
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Add debug script to verify environment variables
+RUN echo '#!/bin/sh' > /app/verify_env.sh && \
+    echo 'echo "Checking environment variables..."' >> /app/verify_env.sh && \
+    echo 'echo "OPENAI_API_KEY exists: $(if [ -n \"$OPENAI_API_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
+    echo 'echo "SUPABASE_URL exists: $(if [ -n \"$SUPABASE_URL\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
+    echo 'echo "SUPABASE_KEY exists: $(if [ -n \"$SUPABASE_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
+    chmod +x /app/verify_env.sh
+
+# Run verification script before starting the application
+CMD /app/verify_env.sh && python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
