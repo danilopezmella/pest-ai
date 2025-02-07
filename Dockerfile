@@ -10,7 +10,11 @@ COPY backend /app
 # Install dependencies without cache to reduce size
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Set environment variables
+# Set default environment variables
+# Note: In production, you MUST set these via Railway environment variables:
+# - OPENAI_API_KEY
+# - SUPABASE_URL
+# - SUPABASE_KEY
 ENV PORT=8000 \
     PYTHONPATH=/app/src \
     ENVIRONMENT=production \
