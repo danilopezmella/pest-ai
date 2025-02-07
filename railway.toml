@@ -3,7 +3,7 @@ builder = "nixpacks"
 providers = ["python"]
 
 [deploy]
-startCommand = "echo '[DEPLOY] Starting...' && which python3 && python3 -V && cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --log-level debug"
+startCommand = "ls -la && echo 'Python location:' && which python3 || true && echo 'Python version:' && python3 -V || true && echo 'Starting server...' && cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --log-level debug"
 restartPolicyType = "on_failure"
 
 [phases.setup]
@@ -15,19 +15,19 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-    "echo '[INSTALL] Starting...'",
-    "which python3",
-    "python3 -V",
-    "echo '[INSTALL] Installing pip'",
-    "python3 -m pip install --upgrade pip",
-    "echo '[INSTALL] Installing requirements'",
+    "ls -la",
+    "echo 'Python location:' && which python3 || true",
+    "echo 'Python version:' && python3 -V || true",
+    "echo 'Installing pip...'",
+    "python3 -m pip install --upgrade pip || true",
+    "echo 'Installing requirements...'",
     "cd backend && python3 -m pip install -r requirements.txt"
 ]
 
 [phases.build]
 cmds = [
-    "echo '[BUILD] Starting...'",
-    "which python3",
-    "python3 -V",
+    "ls -la",
+    "echo 'Python location:' && which python3 || true",
+    "echo 'Python version:' && python3 -V || true",
     "cd backend"
 ]
