@@ -939,7 +939,7 @@ async def generate_custom_response_stream(request: Request):
                     # Detectar keywords
                     try:
                         keywords = detect_keywords(current_question)
-                    except Exception as e:
+    except Exception as e:
                         logger.error(f"Error detecting keywords: {str(e)}")
                         keywords = []
                     

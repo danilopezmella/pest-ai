@@ -397,7 +397,7 @@ class SearchServiceSingle:
                         "final_score": doc['combined_score'],
                         "length_factor": 1.0
                     }
-                
+
                 # Convert to list and sort by score
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
@@ -598,7 +598,7 @@ class SearchServiceSingle:
                         "final_score": doc['combined_score'],
                         "length_factor": 1.0
                     }
-                
+
                 # Convert to list and sort by score
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
@@ -697,11 +697,11 @@ class SearchServiceSingle:
                             else:
                                 doc['found_in'] = [variation_key]
                                 all_results[doc['chunk_id']] = doc
-                
+
                 # Convert to list and sort by score
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
-                
+
                 # Setup debug directory with absolute path
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 debug_dir = os.path.join(current_dir, "..", "..", "debug", "rerank")
@@ -909,11 +909,11 @@ class SearchServiceSingle:
             # Print results summary
             print(f"\n🔄 Final Results:")
             print(f"📊 Total unique documents: {len(results_list)}")
-            for idx, doc in enumerate(results_list[:5], 1):
-                print(f"\n=== Result {idx} ===")
-                print(f"ID: {doc.get('chunk_id', 'MISSING')}")
-                print(f"Combined Score: {doc['combined_score']:.3f}")
-                print("---")
+                for idx, doc in enumerate(results_list[:5], 1):
+                    print(f"\n=== Result {idx} ===")
+                    print(f"ID: {doc.get('chunk_id', 'MISSING')}")
+                    print(f"Combined Score: {doc['combined_score']:.3f}")
+                    print("---")
 
             # Setup debug directory with absolute path
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -951,13 +951,13 @@ class SearchServiceSingle:
             print(f"\n📝 Markdown results saved to: {md_file}")
 
             # Format results for return
-            structured_results = {
+                structured_results = {
                     "semantic_search_results": results_list[:limit],
                     "keyword_search_results": results_list[:limit],
                     "markdown_file": md_file
                 }
                 
-            return structured_results
+                return structured_results
 
         except Exception as e:
             print(f"\n❌ Fatal error in hybrid_search_with_keywords_multi_rerank: {str(e)}")
