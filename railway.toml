@@ -5,7 +5,12 @@ builder = "nixpacks"
 startCommand = "cd backend && python3 -m uvicorn src.main:app --host 0.0.0.0 --port $PORT"
 
 [phases.setup]
-nixPkgs = ["python311"]
+nixPkgs = [
+    "python3",
+    "python3Packages.pip",
+    "python3Packages.uvicorn",
+    "gcc"
+]
 
 [phases.install]
 cmds = [
@@ -17,7 +22,8 @@ cmds = [
 cmds = [
     "echo '=== FINAL CHECK ===' ",
     "find / -name python3 2>/dev/null || echo 'No python3 found'",
-    "ls -la /nix/var/nix/profiles/default/bin/ || echo 'No nix profile bin'",
-    "/nix/var/nix/profiles/default/bin/python3 -V || echo 'Python version failed'",
+    "ls -la /nix/var/nix/profiles/default/bin/ || echo 'No nix profile bin' ",
+    "ls -la /nix/store/ | grep python || echo 'No python in nix store'",
+    "python3 -V || echo 'Python version failed'",
     "cd backend"
 ]
