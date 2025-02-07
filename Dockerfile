@@ -10,10 +10,11 @@ COPY backend /app
 # Instala las dependencias sin cache para reducir el tamaño
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Variable de entorno para el puerto (asegurando que sea un número)
+# Variable de entorno para el puerto y Python path
 ENV PORT=8000
 ENV PYTHONPATH=/app/src
 
 # Comando para iniciar la aplicación
-CMD cd /app/src && uvicorn main:app --host 0.0.0.0 --port $PORT 
+WORKDIR /app/src
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 

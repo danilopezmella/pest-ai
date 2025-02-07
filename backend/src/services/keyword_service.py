@@ -1,5 +1,6 @@
 import logging
-from src.utils.csv_loader import load_keywords
+from utils.csv_loader import load_keywords
+import re
 
 # Configure logging
 logger = logging.getLogger(__name__)

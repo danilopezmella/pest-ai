@@ -1,5 +1,5 @@
-from src.db.queries import insert_question
-from src.models.question import Question
+from db.queries import insert_question
+from models.question import Question
 from fastapi import HTTPException
 
 def save_question(question_data: Question):

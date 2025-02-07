@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Generator, Union
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import sys
-from src.utils.config import OPENAI_API_KEY
+from utils.config import OPENAI_API_KEY
 import json
 import os
 from datetime import datetime  # Agregar esta línea
@@ -13,7 +13,7 @@ from typing import List, Dict
 
 from loguru import logger
 
-from src.config.prompts import (
+from config.prompts import (
     RESPONSE_SYSTEM_PROMPT, 
     RESPONSE_USER_PROMPT,
     SYNTHESIS_PROMPT_TEMPLATE,

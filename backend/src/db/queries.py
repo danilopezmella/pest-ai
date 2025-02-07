@@ -1,4 +1,4 @@
-from src.db.connection import get_db_connection
+from db.connection import get_db_connection
 
 def insert_question(user_id: str, question: str):
     """Inserts a question into the database and returns the result."""

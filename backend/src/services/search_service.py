@@ -1,8 +1,11 @@
 import os
-from src.utils.config import OPENAI_API_KEY
+from utils.config import OPENAI_API_KEY
 from openai import OpenAI
-from src.db.supabase_manager import SupabaseManager
-from src.services.debug_service import DebugService
+from db.supabase_manager import SupabaseManager
+from services.debug_service import DebugService
+from typing import List
+import json
+from datetime import datetime
 
 class SearchService:
     def __init__(self, default_alpha: float = 0.3):

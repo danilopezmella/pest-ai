@@ -14,10 +14,10 @@ from routes.search_routes import router as search_router
 
 app = FastAPI()
 
-# Add CORS middleware with more permissive configuration
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,16 +28,6 @@ app.include_router(search_router, prefix="/api/search")
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # Get port from environment variable (for Railway)
     port = int(os.getenv("PORT", 8000))
-    
-    # Run with reload only in development
     reload = os.getenv("ENVIRONMENT") != "production"
-    
-    uvicorn.run(
-        "main:app",  # Cambiado de src.main:app a main:app
-        host="0.0.0.0", 
-        port=port,
-        reload=reload
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=reload)
