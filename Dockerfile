@@ -1,23 +1,25 @@
-# Usa una imagen ligera de Python 3.11
+# Use a lightweight Python 3.11 base image
 FROM python:3.11-slim
 
-# Establece el directorio de trabajo
+# Set working directory
 WORKDIR /app
 
-# Copia el contenido de la carpeta "backend" al contenedor
+# Copy backend content to container
 COPY backend /app
 
-# Instala las dependencias sin cache para reducir el tamaño
+# Install dependencies without cache to reduce size
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Variable de entorno para el puerto y Python path
+# Set environment variables
 ENV PORT=8000 \
     PYTHONPATH=/app/src \
     ENVIRONMENT=production \
     DEBUG=False \
     LOG_LEVEL=INFO
 
-# Comando para iniciar la aplicación
+# Set working directory for application
 WORKDIR /app/src
+
+# Command to start the application
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 

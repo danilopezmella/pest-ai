@@ -6,23 +6,27 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from utils.config import OPENAI_API_KEY
 
-# Configurar logging
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Cargar variables de entorno
+# Load environment variables
 load_dotenv()
 
-# Usar la configuración centralizada
-if OPENAI_API_KEY == "sk-1234567890":  # Si es el valor por defecto
-    logger.warning("Using default test API key - replace with your actual key for production")
+# Verify API key
+if not OPENAI_API_KEY:
+    logger.error("OPENAI_API_KEY environment variable is not set!")
+    raise ValueError(
+        "OPENAI_API_KEY environment variable is required. "
+        "Please set it in your environment or .env file"
+    )
 
 class QuestionProcessingResult(BaseModel):
     number_of_subquestions: int
     improved_sub_questions: list[str]
     variations: list[list[str]]
 
-# Definir el agente de Pydantic AI
+# Define Pydantic AI agent
 question_processing_agent = Agent(
     "openai:gpt-4-turbo",
     result_type=QuestionProcessingResult,
@@ -52,45 +56,45 @@ question_processing_agent = Agent(
 
 async def process_question(question: str):
     """
-    Procesa una pregunta del usuario mejorando la claridad, separando sub-preguntas si es necesario,
-    y generando variaciones. Se implementan reintentos y un timeout para evitar bloqueos.
+    Process a user question by improving clarity, splitting sub-questions if necessary,
+    and generating variations. Implements retries and timeout to prevent blocking.
     """
     max_retries = 2
-    timeout_seconds = 60  # Tiempo máximo de espera para cada llamada
+    timeout_seconds = 60  # Maximum wait time for each call
 
     for attempt in range(max_retries):
         try:
             logger.info(f"Processing question: {question}")
             logger.debug(f"Attempt {attempt + 1} to process question")
             
-            # Ejecuta la llamada al agente con un timeout para evitar que se quede colgado
+            # Execute agent call with timeout to prevent hanging
             result = await asyncio.wait_for(
                 question_processing_agent.run(question),
                 timeout=timeout_seconds
             )
             
-            # Loguear el resultado crudo
+            # Log raw result
             logger.debug(f"Raw AI result: {result.data}")
             
-            # Asegurarse de tener una estructura de salida consistente
+            # Ensure consistent output structure
             improved_sub_questions = result.data.improved_sub_questions or [question]
             logger.info(f"Improved sub-questions: {improved_sub_questions}")
             
-            # Validar que se tengan variaciones para cada sub-pregunta
+            # Validate variations for each sub-question
             if not result.data.variations or any(len(v) < 5 for v in result.data.variations):
                 logger.warning("Missing or insufficient variations, attempting to retry...")
                 if attempt < max_retries - 1:
-                    continue  # Reintentar si aún no se alcanzó el máximo
+                    continue  # Retry if not at max attempts
                 
-                # Si después de los reintentos aún no se obtienen variaciones válidas, generar unas básicas
+                # If after retries still no valid variations, generate basic ones
                 variations = []
                 for q in improved_sub_questions:
                     basic_variations = [
                         q,  # Original
-                        f"Could you explain {q.lower().strip('?')}?",  # Forma educada
-                        f"What is the meaning of {q.lower().strip('?')}?",  # Forma de definición
-                        f"Please describe {q.lower().strip('?')}.",  # Forma de solicitud
-                        f"I would like to understand {q.lower().strip('?')}."  # Forma enunciativa
+                        f"Could you explain {q.lower().strip('?')}?",  # Polite form
+                        f"What is the meaning of {q.lower().strip('?')}?",  # Definition form
+                        f"Please describe {q.lower().strip('?')}.",  # Request form
+                        f"I would like to understand {q.lower().strip('?')}."  # Statement form
                     ]
                     variations.append(basic_variations)
             else:
@@ -98,7 +102,7 @@ async def process_question(question: str):
             
             logger.debug(f"Generated variations: {variations}")
 
-            # Preparar la respuesta final
+            # Prepare final response
             response = {
                 "number_of_subquestions": len(improved_sub_questions),
                 **{
@@ -115,13 +119,13 @@ async def process_question(question: str):
         except asyncio.TimeoutError:
             logger.error(f"Attempt {attempt + 1} timed out after {timeout_seconds} seconds.", exc_info=True)
             if attempt == max_retries - 1:
-                break  # Si se agota el tiempo en el último intento, se procederá a la respuesta de fallback
+                break  # If timeout on last attempt, proceed to fallback response
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} failed: {str(e)}", exc_info=True)
             if attempt == max_retries - 1:
                 break
 
-    # Respuesta de fallback en caso de error después de los reintentos
+    # Fallback response in case of error after retries
     fallback = {
         "number_of_subquestions": 1,
         "subquestion1": question,
@@ -136,7 +140,7 @@ async def process_question(question: str):
     logger.info(f"Returning fallback response: {fallback}")
     return fallback
 
-# Ejemplo de uso (si se ejecuta en un entorno asíncrono)
+# Example usage (if running in async environment)
 if __name__ == "__main__":
     import asyncio
 
