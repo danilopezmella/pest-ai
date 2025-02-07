@@ -21,14 +21,16 @@ RUN echo '#!/bin/sh' > /app/verify_env.sh && \
     echo 'echo "SUPABASE_KEY exists: $(if [ -n \"$SUPABASE_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     chmod +x /app/verify_env.sh
 
-# Set environment variables
-ENV OPENAI_API_KEY=$OPENAI_API_KEY \
-    SUPABASE_URL=$SUPABASE_URL \
-    SUPABASE_KEY=$SUPABASE_KEY \
-    PORT=8000 \
+# Set default environment variables
+ENV PORT=8000 \
     PYTHONPATH=/app/src \
-    ENVIRONMENT=development
+    ENVIRONMENT=development \
+    PYTHONUNBUFFERED=1
 
 # Command to start the application
-CMD ["/bin/sh", "-c", "/app/verify_env.sh && python -m uvicorn main:app --host 0.0.0.0 --port 8000"]
+CMD /app/verify_env.sh && \
+    OPENAI_API_KEY=${OPENAI_API_KEY} \
+    SUPABASE_URL=${SUPABASE_URL} \
+    SUPABASE_KEY=${SUPABASE_KEY} \
+    python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
