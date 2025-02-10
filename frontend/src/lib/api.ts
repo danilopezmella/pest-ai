@@ -1,14 +1,23 @@
 import axios from 'axios';
 
 // Create an axios instance with default configuration
+console.log('Current Environment:', import.meta.env.MODE); // 'development' or 'production'
+console.log('Environment API URL:', import.meta.env.VITE_API_URL);
+console.log('Using fallback?', !import.meta.env.VITE_API_URL);
+console.log('Is Production?', import.meta.env.PROD);
+console.log('Is Development?', import.meta.env.DEV);
+
 const api = axios.create({
-    baseURL: 'http://localhost:8000', // Your FastAPI backend URL
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000', // Use environment variable with fallback
     headers: {
         'Content-Type': 'application/json',
     },
     // Remove withCredentials since we don't need it for this simple test
     withCredentials: false
 });
+
+// Log the final baseURL being used
+console.log('Final API URL:', api.defaults.baseURL);
 
 // Add response interceptor for error handling
 api.interceptors.response.use(

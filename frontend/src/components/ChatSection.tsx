@@ -77,7 +77,7 @@ const ChatSection: React.FC<ChatSectionProps> = ({ messages, isLoading, isThinki
           ))}
           {isThinking && (
             <div className="flex justify-start mb-3 px-12">
-              <ThinkingAnimation />
+              <ThinkingAnimation stage={isThinking ? 'thinking' : null} isIPhoneDevice={false} />
             </div>
           )}
         </div>

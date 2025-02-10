@@ -316,21 +316,23 @@ class ResponseService:
     async def generate_streaming_response_multi_rerank(self, markdown_files: List[str], question: str, subquestions: List[str]):
         """Generate a streaming response using markdown files as context."""
         try:
+            
+            #TODO: Remove this
             # Setup debug directory for raw LLM output
-            debug_dir = "debug/stream/llm_raw"
-            os.makedirs(debug_dir, exist_ok=True)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            raw_output_file = os.path.join(debug_dir, f"llm_raw_{timestamp}.txt")
+            # debug_dir = "debug/stream/llm_raw"
+            # os.makedirs(debug_dir, exist_ok=True)
+            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # raw_output_file = os.path.join(debug_dir, f"llm_raw_{timestamp}.txt")
             
             # Lista para acumular respuestas
             all_responses = []
             all_contexts = []
             
-            # Initial separator
-            yield "\n\n"
-            yield "=" * 80 + "\n"
-            yield "🔍 Starting Multi-Question Analysis\n"
-            yield "=" * 80 + "\n\n"
+            # # Initial separator
+            # yield "\n\n"
+            # yield "=" * 80 + "\n"
+            # yield "🔍 Starting Multi-Question Analysis\n"
+            # yield "=" * 80 + "\n\n"
             
             # Process each subquestion independently
             for idx, (md_file, subquestion) in enumerate(zip(markdown_files, subquestions), 1):
@@ -357,15 +359,16 @@ class ResponseService:
                 with open(md_file, 'r', encoding='utf-8') as f:
                     content = f.read()
                     all_contexts.append(content)
-                    
+                
+                #TODO: Remove this    
                 # Save debug info for this subquestion
-                debug_dir = f"debug/stream/subq_{idx}"
-                debug_file = self.save_stream_debug(
-                    content, 
-                    subquestion,
-                    debug_dir=debug_dir
-                )
-                print(f"📝 Debug info saved to: {debug_file}")
+                # debug_dir = f"debug/stream/subq_{idx}"
+                # debug_file = self.save_stream_debug(
+                #     content, 
+                #     subquestion,
+                #     debug_dir=debug_dir
+                # )
+                # print(f"📝 Debug info saved to: {debug_file}")
                 
                 # Always use INTERMEDIATE_QUESTION_TEMPLATE for consistent detailed structure
                 messages = [
@@ -402,22 +405,21 @@ class ResponseService:
                     "response": "".join(subq_content)
                 })
                 
-                # Save raw content for debugging
-                with open(raw_output_file, "a", encoding="utf-8") as f:
-                    f.write(f"\n\n=== Subquestion {idx} Raw Output ===\n")
-                    f.write(f"Question: {subquestion}\n")
-                    f.write("Raw Content:\n")
-                    f.write("".join(subq_content))
-                    f.write(f"\n=== End Subquestion {idx} ===\n")
+                # Delete the markdown file after we're done with it
+                try:
+                    os.remove(md_file)
+                    print(f"🗑️ Deleted markdown file: {md_file}")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete file {md_file}: {str(e)}")
                     
                 print(f"✅ Completed response for subquestion {idx}")
             
             # Add final synthesis if there are multiple questions
             if len(subquestions) > 1:
-                yield "\n\n"
-                yield "=" * 80 + "\n"
-                yield "🔄 Generating Final Synthesis\n"
-                yield "=" * 80 + "\n\n"
+                # yield "\n\n"
+                # yield "=" * 80 + "\n"
+                # yield "🔄 Generating Final Synthesis\n"
+                # yield "=" * 80 + "\n\n"
                 
                 # Prepare synthesis prompt
                 synthesis_prompt = f"""
@@ -474,60 +476,3 @@ Please structure your synthesis as follows:
         except Exception as e:
             logger.error(f"Error in generate_streaming_response_multi_rerank: {str(e)}", exc_info=True)
             yield f"\nError: {str(e)}"
-
-
-    # async def generate_streaming_response_with_prompts(
-    #     self, 
-    #     markdown_content: str,
-    #     system_prompt: str,
-    #     user_prompt: str,
-    #     debug_dir: str = "debug/stream/custom",
-    #     save_debug: bool = True
-    # ):
-    #     """Generate a streaming response using custom prompts and markdown content.
-        
-    #     Args:
-    #         markdown_content: The markdown content to use as context
-    #         system_prompt: The system prompt to use
-    #         user_prompt: The user prompt template to use (should contain {context} placeholder)
-    #         debug_dir: Directory to save debug files (if save_debug=True)
-    #         save_debug: Whether to save debug files
-        
-    #     Yields:
-    #         Chunks of the generated response as they become available
-    #     """
-    #     try:
-    #         # Save debug info if requested
-    #         if save_debug:
-    #             debug_file = self.save_stream_debug(
-    #                 markdown_content,
-    #                 user_prompt,  # Usamos el user prompt como "question" para el debug
-    #                 debug_dir=debug_dir
-    #             )
-    #             print(f"\n🔍 Debug info saved to: {debug_file}")
-            
-    #         # Prepare messages
-    #         messages = [
-    #             {"role": "system", "content": system_prompt},
-    #             {"role": "user", "content": user_prompt.format(
-    #                 context=markdown_content
-    #             )}
-    #         ]
-            
-    #         # Generate response
-    #         response_stream = await self.openai_client.chat.completions.create(
-    #             model=self.model,
-    #             messages=messages,
-    #             temperature=0.3,
-    #             max_tokens=4000,
-    #             stream=True
-    #         )
-            
-    #         # Stream the response
-    #         async for chunk in response_stream:
-    #             if chunk.choices[0].delta.content:
-    #                 yield chunk.choices[0].delta.content
-                        
-    #     except Exception as e:
-    #         logger.error(f"Error in generate_streaming_response_with_prompts: {str(e)}", exc_info=True)
-    #         yield f"\nError: {str(e)}"

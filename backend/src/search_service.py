@@ -426,15 +426,16 @@ class SearchService:
                     variations_info[var_key] = parsed_question[var_key]
             self.debug_service.create_variations_debug_file(variations_info)
             
-            # Create metrics debug
-            metrics_info = {
-                'totals': {
-                    'total_docs': total_docs,
-                    'primary_docs': total_primary,
-                    'variation_docs': total_variations
-                }
-            }
-            self.debug_service.create_metrics_debug_file(metrics_info)
+            # # Create metrics debug
+            # metrics_info = {
+            #     'totals': {
+            #         'total_docs': total_docs,
+            #         'primary_docs': total_primary,
+            #         'variation_docs': total_variations
+            #     }
+            # }
+            # self.debug_service.create_metrics_debug_file(metrics_info)
+
 
             return structured_results
 

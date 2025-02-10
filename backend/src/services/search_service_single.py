@@ -193,14 +193,14 @@ class SearchServiceSingle:
                 query_info['question'] = question
                 self.debug_service.create_search_debug_file(structured_results, query_info)
                 
-                # Create metrics debug
-                metrics_info = {
-                    'totals': {
-                        'total_docs': len(results_list),
-                        'unique_docs': len(set(doc['chunk_id'] for doc in results_list))
-                    }
-                }
-                self.debug_service.create_metrics_debug_file(metrics_info)
+                # # Create metrics debug
+                # metrics_info = {
+                #     'totals': {
+                #         'total_docs': len(results_list),
+                #         'unique_docs': len(set(doc['chunk_id'] for doc in results_list))
+                #     }
+                # }
+                # self.debug_service.create_metrics_debug_file(metrics_info)
                 
                 return structured_results
 
