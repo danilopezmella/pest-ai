@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ThinkingAnimation } from './ThinkingAnimation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { RetroText } from './RetroText';
 
 // Use environment variable or fallback to localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -9,66 +9,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const isIPhone = () => {
   const userAgent = navigator.userAgent.toLowerCase();
   return userAgent.includes('iphone');
-};
-
-const FollowUpQuestions: React.FC<{
-  questions: string[];
-  onQuestionClick: (question: string) => void;
-}> = ({ questions, onQuestionClick }) => {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // Add a small delay before showing questions
-    const timer = setTimeout(() => setIsReady(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isReady) {
-    return (
-      <div className="space-y-2">
-        <div className="text-sm text-gray-400">Thinking about follow-up questions...</div>
-        <div className="flex items-center gap-2">
-          <motion.div
-            className="w-2 h-2 bg-purple-400 rounded-full"
-            animate={{ scale: [1, 1.5, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-          <motion.div
-            className="w-2 h-2 bg-purple-400 rounded-full"
-            animate={{ scale: [1, 1.5, 1] }}
-            transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-          />
-          <motion.div
-            className="w-2 h-2 bg-purple-400 rounded-full"
-            animate={{ scale: [1, 1.5, 1] }}
-            transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="text-sm text-gray-400">Follow-up questions:</div>
-      <div className="grid gap-2">
-        <AnimatePresence>
-          {questions.map((question, index) => (
-            <motion.button
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              onClick={() => onQuestionClick(question)}
-              className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors"
-            >
-              <div className="text-purple-400 text-sm">{question}</div>
-            </motion.button>
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
 };
 
 export const ChatTest: React.FC = () => {
@@ -291,6 +231,19 @@ export const ChatTest: React.FC = () => {
 
       {/* Main centered container */}
       <div className="w-[896px] flex flex-col relative z-10">
+        {/* Back button - Only show when there are messages */}
+        {messages.length > 0 && (
+          <button
+            onClick={() => setMessages([])}
+            className="fixed top-4 left-4 p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-gray-300 transition-all z-30 backdrop-blur-sm"
+            aria-label="Back to terminal"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+        )}
+
         {/* Header - Hidden on iPhone */}
         {!isIPhoneDevice && (
           <header className="fixed top-0 left-0 right-0 border-b border-white/10 bg-white/5 backdrop-blur-sm z-20">
@@ -314,18 +267,19 @@ export const ChatTest: React.FC = () => {
           ref={messagesContainerRef}
           onScroll={handleScroll}
           className={`flex-grow overflow-y-auto ${
-            isIPhoneDevice ? 'h-[calc(100vh-10rem)]' : 'h-[calc(100vh-8.5rem)]'
+            isIPhoneDevice ? 'h-[calc(100vh-20rem)]' : 'h-[calc(100vh-12.5rem)]'
           } scrollbar-thin scrollbar-thumb-purple-600/50 scrollbar-track-transparent`}
         >
           <div className="px-4 py-4 space-y-4 min-h-full">
             {messages.length === 0 && !isLoading && (
-              <div className="h-full flex flex-col items-center justify-center space-y-8 px-4">
+              <div className="h-full flex flex-col items-center justify-center space-y-8">
                 <div className="text-center space-y-2">
                   <h2 className="text-xl font-semibold text-gray-200">Welcome to PEST-AI Assistant</h2>
                   <p className="text-gray-400 text-sm">Ask me anything about PEST software and documentation</p>
                 </div>
                 
-                <div className="w-full max-w-lg space-y-3">
+                {/* Popular questions */}
+                <div className="w-full max-w-lg">
                   <div className="text-sm text-gray-400 mb-2">Popular questions:</div>
                   <button 
                     onClick={() => setMessageInput("What is PEST?")}
@@ -334,20 +288,62 @@ export const ChatTest: React.FC = () => {
                     <div className="text-purple-400 font-medium">What is PEST?</div>
                     <div className="text-sm text-gray-400 mt-1">Learn about PEST's core functionality and purpose</div>
                   </button>
-                  <button 
-                    onClick={() => setMessageInput("How do I run PEST in predictive analysis mode?")}
-                    className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors"
-                  >
-                    <div className="text-purple-400 font-medium">How do I run PEST in predictive analysis mode?</div>
-                    <div className="text-sm text-gray-400 mt-1">Running PEST in predictive analysis mode involves using PESTPP-IES</div>
-                  </button>
-                  <button 
-                    onClick={() => setMessageInput("What is the PEST control file?")}
-                    className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors"
-                  >
-                    <div className="text-purple-400 font-medium">What is the PEST control file?</div>
-                    <div className="text-sm text-gray-400 mt-1">This is the main file for PEST configuration</div>
-                  </button>
+                </div>
+                
+                {/* Terminal section */}
+                <div className="w-full max-w-lg">
+                  <div className="text-sm text-gray-400 mb-2">Why don't you try a keyword?</div>
+                  <div className="bg-[#1a1b23]/95 backdrop-blur-sm rounded-xl border border-[#2a2b3d] shadow-2xl overflow-hidden">
+                    {/* Terminal header */}
+                    <div className="bg-[#2a2b3d] px-2 py-1.5 flex items-center justify-end">
+                      <div className="flex gap-0.5">
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-white/5">
+                          <svg className="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4"/>
+                          </svg>
+                        </button>
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-white/5">
+                          <svg className="w-2.5 h-2.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="4" y="4" width="16" height="16" rx="1"/>
+                          </svg>
+                        </button>
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-red-500">
+                          <svg className="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Terminal content */}
+                    <div className="p-4 space-y-1 font-mono text-base relative text-left">
+                      {/* Scanline effect */}
+                      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-scan" />
+                      {/* CRT flicker */}
+                      <div className="absolute inset-0 pointer-events-none bg-white/[0.02] animate-flicker" />
+                      
+                      <div className="text-green-500 text-left flex items-center">
+                        <span>C:\Users\gwm{`>`} pest calibrated</span>
+                        <span className="ml-0.5 animate-cursor">|</span>
+                      </div>
+                      <RetroText 
+                        words={[
+                          "pcf",
+                          "* control data",
+                          "RSTFLE PESTMODE",
+                          "NPAR NOBS NPARGP NPRIOR NOBSGP",
+                          "NTPLFLE NINSFLE PRECIS DPOINT",
+                          "RLAMBDA1 RLAMFAC PHIRATSUF PHIREDLAM NUMLAM",
+                          "RELPARMAX FACPARMAX FACORIG",
+                          "PHIREDSWH",
+                          "NOPTMAX PHIREDSTP NPHISTP NPHINORED RELPARSTP NRELPAR",
+                          "ICOV ICOR IEIG"
+                        ]}
+                        className="flex flex-col items-start"
+                        onWordClick={(word) => setMessageInput(`What is ${word}?`)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -396,10 +392,20 @@ export const ChatTest: React.FC = () => {
 
                     {/* Follow-up questions - Only show when they exist */}
                     {msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
-                      <FollowUpQuestions
-                        questions={msg.followUpQuestions}
-                        onQuestionClick={setMessageInput}
-                      />
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-400">Follow-up questions:</div>
+                        <div className="grid gap-2">
+                          {msg.followUpQuestions.map((question, qIdx) => (
+                            <button 
+                              key={qIdx}
+                              onClick={() => setMessageInput(question)}
+                              className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors"
+                            >
+                              <div className="text-purple-400 text-sm">{question}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
@@ -418,17 +424,19 @@ export const ChatTest: React.FC = () => {
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} className="h-4" />
+            <div ref={messagesEndRef} />
+            {/* Padding div to prevent overlap with input */}
+            <div className={isIPhoneDevice ? 'h-40' : 'h-16'} />
           </div>
         </div>
 
         {/* Input Area */}
         <div className={`${
           isIPhoneDevice 
-            ? 'border-t border-white/10 bg-white/5 backdrop-blur-sm pb-8' 
+            ? 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#1e1e2f]/80 backdrop-blur-sm pb-20' 
             : 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-white/5 backdrop-blur-sm z-20'
         }`}>
-          <div className={isIPhoneDevice ? 'px-4 py-4' : 'flex justify-center'}>
+          <div className={isIPhoneDevice ? 'px-4 pt-4' : 'flex justify-center'}>
             <div className={isIPhoneDevice ? '' : 'w-[896px] px-4 py-4'}>
               <div className="relative h-[52px]">
                 <textarea
@@ -439,7 +447,7 @@ export const ChatTest: React.FC = () => {
                   }}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about PEST..."
-                  className="w-full p-4 bg-white/5 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25 outline-none font-sans text-[15px] placeholder-gray-400 absolute bottom-0 left-0 right-0 transition-all overflow-hidden"
+                  className="w-full p-4 bg-[#1e1e2f]/50 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25 outline-none font-sans text-[15px] text-white placeholder-gray-400 absolute bottom-0 left-0 right-0 transition-all overflow-hidden"
                   style={{ 
                     height: `${textareaHeight}px`,
                     transform: `translateY(${-(textareaHeight - 52)}px)`,

@@ -405,14 +405,14 @@ class ResponseService:
                     "response": "".join(subq_content)
                 })
                 
-                # Delete the markdown file after we're done with it
-                try:
-                    os.remove(md_file)
-                    print(f"🗑️ Deleted markdown file: {md_file}")
-                except Exception as e:
-                    print(f"⚠️ Warning: Could not delete file {md_file}: {str(e)}")
+                # # Delete the markdown file after we're done with it
+                # try:
+                #     os.remove(md_file)
+                #     print(f"🗑️ Deleted markdown file: {md_file}")
+                # except Exception as e:
+                #     print(f"⚠️ Warning: Could not delete file {md_file}: {str(e)}")
                     
-                print(f"✅ Completed response for subquestion {idx}")
+                # print(f"✅ Completed response for subquestion {idx}")
             
             # Add final synthesis if there are multiple questions
             if len(subquestions) > 1:
