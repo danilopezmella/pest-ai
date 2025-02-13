@@ -658,7 +658,7 @@ Please structure your synthesis as follows:
                     for char in chunk.text:
                         yield char
                         # Add a small delay between characters
-                        await asyncio.sleep(0.00005)
+                        await asyncio.sleep(0.00001)
                         
         except Exception as e:
             logger.error(f"Error in stream_gemini: {str(e)}", exc_info=True)
