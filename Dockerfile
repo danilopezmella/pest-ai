@@ -13,9 +13,15 @@ RUN mkdir -p /app/src/data && cp /app/data/keywords.csv /app/src/data/keywords.c
 # Move .env file to src directory if it exists
 RUN if [ -f "/app/.env" ]; then mv /app/.env /app/src/.env; fi
 
-# Install dependencies without cache to reduce size
-RUN pip install --no-cache-dir -r /app/requirements.txt && \
-    pip install --no-cache-dir google-generativeai==0.3.2
+# Clean pip cache and install dependencies
+RUN pip cache purge && \
+    pip install --no-cache-dir -r /app/requirements.txt
+
+# Verify Google AI packages installation
+RUN python -c "import google.generativeai; import google.genai; import google.ai.generativelanguage" || { \
+    pip install --no-cache-dir google-genai==1.2.0 google-generativeai==0.8.4 google-ai-generativelanguage==0.6.15; \
+    python -c "import google.generativeai; import google.genai; import google.ai.generativelanguage"; \
+    }
 
 # Set working directory for application
 WORKDIR /app/src
@@ -51,7 +57,7 @@ RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo '  echo "ERROR: GEMINI_API_KEY is not set. Please configure it in Railway."' >> /app/entrypoint.sh && \
     echo '  exit 1' >> /app/entrypoint.sh && \
     echo 'fi' >> /app/entrypoint.sh && \
-    echo 'python -c "import google.generativeai" || { echo "ERROR: Failed to import google.generativeai"; exit 1; }' >> /app/entrypoint.sh && \
+    echo 'python -c "import google.generativeai; import google.genai; import google.ai.generativelanguage" || { echo "ERROR: Failed to import Google AI modules"; exit 1; }' >> /app/entrypoint.sh && \
     echo 'export OPENAI_API_KEY="${OPENAI_API_KEY}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_URL="${SUPABASE_URL}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_KEY="${SUPABASE_KEY}"' >> /app/entrypoint.sh && \
