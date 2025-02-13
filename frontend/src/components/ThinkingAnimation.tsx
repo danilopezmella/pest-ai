@@ -36,9 +36,9 @@ export const ThinkingAnimation: React.FC<ThinkingAnimationProps> = ({ stage, isI
           : 'Analyzing information to provide the best answer...'}
       </span>
       <div className="flex space-x-1.5">
-        <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-        <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-        <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+        <div className="w-1 h-1 bg-teal-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-1 h-1 bg-teal-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-1 h-1 bg-teal-400 rounded-full animate-bounce"></div>
       </div>
     </div>
   );

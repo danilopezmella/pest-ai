@@ -83,8 +83,8 @@ export const RetroText: React.FC<RetroTextProps> = ({ words, className = '', onW
                 transition={{ duration: 0.2 }}
                 className={`
                   transition-colors duration-200
-                  ${part.isClickable ? 'cursor-pointer hover:text-pink-400' : ''}
-                  ${isSelected ? 'text-pink-400' : 'text-[#C8C8C9]'}
+                  ${part.isClickable ? 'cursor-pointer hover:text-teal-300' : ''}
+                  ${isSelected ? 'text-teal-300' : 'text-[#C8C8C9]'}
                   ${isVisible ? 'brightness-125 text-shadow-glow' : ''}
                 `}
                 onClick={() => {
