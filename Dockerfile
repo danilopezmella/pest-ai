@@ -25,6 +25,7 @@ RUN echo '#!/bin/sh' > /app/verify_env.sh && \
     echo 'echo "OPENAI_API_KEY exists: $(if [ -n \"$OPENAI_API_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     echo 'echo "SUPABASE_URL exists: $(if [ -n \"$SUPABASE_URL\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     echo 'echo "SUPABASE_KEY exists: $(if [ -n \"$SUPABASE_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
+    echo 'echo "GEMINI_API_KEY exists: $(if [ -n \"$GEMINI_API_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     chmod +x /app/verify_env.sh
 
 # Set environment variables with defaults
@@ -34,7 +35,8 @@ ENV PORT=8000 \
     PYTHONUNBUFFERED=1 \
     OPENAI_API_KEY="" \
     SUPABASE_URL="" \
-    SUPABASE_KEY=""
+    SUPABASE_KEY="" \
+    GEMINI_API_KEY=""
 
 # Create entrypoint script that will override with actual values
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
@@ -47,8 +49,9 @@ RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'export OPENAI_API_KEY="${OPENAI_API_KEY}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_URL="${SUPABASE_URL}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_KEY="${SUPABASE_KEY}"' >> /app/entrypoint.sh && \
+    echo 'export GEMINI_API_KEY="${GEMINI_API_KEY}"' >> /app/entrypoint.sh && \
     echo 'echo "Starting application with:"' >> /app/entrypoint.sh && \
-    echo 'env | grep -E "OPENAI|SUPABASE|ENVIRONMENT"' >> /app/entrypoint.sh && \
+    echo 'env | grep -E "OPENAI|SUPABASE|GEMINI|ENVIRONMENT"' >> /app/entrypoint.sh && \
     echo 'exec python -m uvicorn main:app --host 0.0.0.0 --port $PORT' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 
