@@ -14,7 +14,8 @@ RUN mkdir -p /app/src/data && cp /app/data/keywords.csv /app/src/data/keywords.c
 RUN if [ -f "/app/.env" ]; then mv /app/.env /app/src/.env; fi
 
 # Install dependencies without cache to reduce size
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt && \
+    pip install --no-cache-dir google-generativeai==0.3.2
 
 # Set working directory for application
 WORKDIR /app/src
@@ -25,7 +26,7 @@ RUN echo '#!/bin/sh' > /app/verify_env.sh && \
     echo 'echo "OPENAI_API_KEY exists: $(if [ -n \"$OPENAI_API_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     echo 'echo "SUPABASE_URL exists: $(if [ -n \"$SUPABASE_URL\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
     echo 'echo "SUPABASE_KEY exists: $(if [ -n \"$SUPABASE_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
-    echo 'echo "GEMINI_API_KEY exists: $(if [ -n \"$GEMINI_API_KEY\" ]; then echo YES; else echo NO; fi)"' >> /app/verify_env.sh && \
+    echo 'echo "GEMINI_API_KEY exists: $(if [ -n \"$GEMINI_API_KEY\" ]; then echo \"YES - Value: ${GEMINI_API_KEY}\"; else echo \"NO - Please configure GEMINI_API_KEY in Railway\"; fi)"' >> /app/verify_env.sh && \
     chmod +x /app/verify_env.sh
 
 # Set environment variables with defaults
@@ -46,6 +47,11 @@ RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo '  . ./.env' >> /app/entrypoint.sh && \
     echo '  set +a' >> /app/entrypoint.sh && \
     echo 'fi' >> /app/entrypoint.sh && \
+    echo 'if [ -z "$GEMINI_API_KEY" ]; then' >> /app/entrypoint.sh && \
+    echo '  echo "ERROR: GEMINI_API_KEY is not set. Please configure it in Railway."' >> /app/entrypoint.sh && \
+    echo '  exit 1' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
+    echo 'python -c "import google.generativeai" || { echo "ERROR: Failed to import google.generativeai"; exit 1; }' >> /app/entrypoint.sh && \
     echo 'export OPENAI_API_KEY="${OPENAI_API_KEY}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_URL="${SUPABASE_URL}"' >> /app/entrypoint.sh && \
     echo 'export SUPABASE_KEY="${SUPABASE_KEY}"' >> /app/entrypoint.sh && \
