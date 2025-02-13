@@ -5,7 +5,6 @@ from pydantic_ai import Agent
 from pydantic import BaseModel
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Read API key directly from environment

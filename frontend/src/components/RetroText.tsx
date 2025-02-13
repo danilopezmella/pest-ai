@@ -9,6 +9,9 @@ interface RetroTextProps {
 }
 
 export const RetroText: React.FC<RetroTextProps> = ({ words, className = '', onWordClick }) => {
+  // Añadir estado para la selección actual
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+
   // Procesar las líneas para convertirlas en un array de arrays de palabras
   const processedWords = words.map((line, lineIndex) => {
     // Dividir la línea en palabras, preservando los caracteres especiales
@@ -100,13 +103,20 @@ export const RetroText: React.FC<RetroTextProps> = ({ words, className = '', onW
                   ? 'text-white brightness-125 text-shadow-glow' 
                   : 'text-[#C8C8C9]'}
                 ${part.isClickable ? 'cursor-pointer' : ''}
-                ${part.isControlDataLine ? 'group-hover:text-purple-400 hover:text-purple-400' : 'hover:text-purple-400'}
+                ${part.isControlDataLine 
+                  ? selectedText === '* control data' 
+                    ? 'text-pink-400' 
+                    : 'group-hover:text-pink-400 hover:text-pink-400' 
+                  : selectedText === part.text.trim() 
+                    ? 'text-pink-400' 
+                    : 'hover:text-pink-400'}
               `}
               onClick={() => {
                 if (part.isClickable && onWordClick) {
-                  // Si es parte de la línea de control data, enviar el texto completo
-                  const textToSend = part.isControlDataLine ? '* control data' : part.text.trim();
-                  onWordClick(textToSend);
+                  // Si es parte de la línea de control data, seleccionar la línea completa
+                  const textToSelect = part.isControlDataLine ? '* control data' : part.text.trim();
+                  setSelectedText(textToSelect);
+                  onWordClick(textToSelect);
                 }
               }}
             >

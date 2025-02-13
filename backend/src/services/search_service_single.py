@@ -328,65 +328,149 @@ class SearchServiceSingle:
             
             try:
                 # Get documents that match any keyword
-                print(f"\n🔍 Finding documents containing keywords")
-                documents_with_keywords = {}  # dict to store doc_id -> keyword count
-                keyword_counts = {kw: 0 for kw in keywords}
+                print(f"\n🔍 Getting keyword matches for filtering")
+                all_filtered_ids = set()
                 
+                # Buscar documentos para cada keyword individualmente
                 for keyword in keywords:
                     print(f"\n🔍 Searching for keyword: {keyword}")
                     keyword_response = self.supabase.match_documents_by_text(
-                        query=keyword,
-                        limit=limit * 5  # Get more results since we'll filter them
+                        keyword,
+                        limit=10000  # Get a large initial set
                     )
                     if keyword_response.data:
-                        count = len(keyword_response.data)
-                        keyword_counts[keyword] = count
-                        print(f"   Found {count} documents containing '{keyword}'")
-                        
-                        # Count how many keywords each document contains
-                        for doc in keyword_response.data:
-                            content = doc.get('content', '').lower()
-                            matches = sum(1 for kw in keywords if kw.lower() in content)
-                            if matches > 0:
-                                doc_id = doc['chunk_id']
-                                documents_with_keywords[doc_id] = max(matches, documents_with_keywords.get(doc_id, 0))
-                                
-                print(f"\n📊 Found {len(documents_with_keywords)} documents containing keywords:")
-                print(f"   Documents by number of keywords:")
-                for matches in range(1, len(keywords) + 1):
-                    count = sum(1 for matches_count in documents_with_keywords.values() if matches_count == matches)
-                    print(f"   - {count} documents contain {matches} keywords")
+                        new_ids = set(doc['chunk_id'] for doc in keyword_response.data)
+                        new_matches = len(new_ids - all_filtered_ids)
+                        all_filtered_ids.update(new_ids)
+                        print(f"📊 Found {new_matches} new matches for keyword '{keyword}'")
                 
-                if not documents_with_keywords:
-                    print("\n⚠️ No documents found containing any keywords")
-                    return {
-                        "semantic_search_results": [],
-                        "keyword_search_results": []
-                    }
+                # Then process variations if any
+                if variations:
+                    for query in variations:
+                        if query and query != question:  # Skip if empty or same as primary
+                            print(f"\n🔄 Getting keyword matches for variation: '{query}'")
+                            var_keyword_response = self.supabase.match_documents_by_text(
+                                query,
+                                limit=10000
+                            )
+                            if var_keyword_response.data:
+                                new_ids = set(doc['chunk_id'] for doc in var_keyword_response.data)
+                                new_matches = len(new_ids - all_filtered_ids)
+                                all_filtered_ids.update(new_ids)
+                                print(f"📊 Found {new_matches} new matches from variation")
 
-                # Store all results from all variations
-                all_results = {}  # chunk_id -> doc with best score
-                
-                # Process original question
-                print(f"\n🔍 Processing original question: '{question}'")
-                results = self._process_single_query(
-                    question=question,
-                    documents_with_keywords=documents_with_keywords,
-                    limit=limit,
-                    alpha=alpha
-                )
-                self._merge_results(all_results, results)
-                
-                # Process each variation
-                for i, variation in enumerate(variations, 1):
-                    print(f"\n🔍 Processing variation {i}: '{variation}'")
-                    results = self._process_single_query(
-                        question=variation,
-                        documents_with_keywords=documents_with_keywords,
+                # If no documents found with keywords, fall back to regular search
+                if not all_filtered_ids:
+                    print(f"\n⚠️ No documents found matching keywords, falling back to regular hybrid search")
+                    return self.hybrid_search_with_keywords_multi_rerank(
+                        question=question,
+                        keywords=[],
+                        variations=variations,
                         limit=limit,
-                        alpha=alpha
+                        alpha=alpha,
+                        subquestion_number=subquestion_number,
+                        request_timestamp=request_timestamp
                     )
-                    self._merge_results(all_results, results)
+
+                # Convert set back to list for further processing
+                filtered_ids = list(all_filtered_ids)
+                print(f"\n📊 Found total of {len(filtered_ids)} unique documents matching keywords")
+
+                # Initialize combined results
+                all_results = {}
+                
+                # Process original question first
+                print(f"\n🔍 Running semantic search for primary query")
+                embedding = self.get_embedding(question)
+                semantic_response = self.supabase.match_documents_by_embedding_filtered(
+                    embedding=embedding,
+                    filtered_ids=filtered_ids,
+                    limit=limit * 2
+                )
+
+                # Process semantic results
+                if semantic_response.data:
+                    print(f"📊 Found {len(semantic_response.data)} semantic matches")
+                    self._normalize_scores(semantic_response.data, 'similarity')
+                    for doc in semantic_response.data:
+                        doc['normalized_semantic'] = doc.get('normalized_similarity', 0)
+                        doc['normalized_keyword'] = 0
+                        doc['found_in'] = ['original']
+                        all_results[doc['chunk_id']] = doc
+
+                # Get keyword search results
+                print(f"\n🔍 Running keyword search for primary query")
+                keyword_response = self.supabase.match_documents_by_text_filtered(
+                    query=question,
+                    filtered_ids=filtered_ids,
+                    limit=limit * 2
+                )
+
+                # Process keyword results
+                if keyword_response.data:
+                    print(f"📊 Found {len(keyword_response.data)} keyword matches")
+                    self._normalize_scores(keyword_response.data, 'rank')
+                    for doc in keyword_response.data:
+                        if doc['chunk_id'] in all_results:
+                            all_results[doc['chunk_id']]['normalized_keyword'] = doc.get('normalized_rank', 0)
+                            if 'original' not in all_results[doc['chunk_id']]['found_in']:
+                                all_results[doc['chunk_id']]['found_in'].append('original')
+                        else:
+                            doc['normalized_keyword'] = doc.get('normalized_rank', 0)
+                            doc['normalized_semantic'] = 0
+                            doc['found_in'] = ['original']
+                            all_results[doc['chunk_id']] = doc
+
+                # Process variations if any
+                if variations:
+                    for i, variation in enumerate(variations, 1):
+                        variation_key = f"variation_{i}"
+                        print(f"\n🔍 Processing variation {i}: '{variation}'")
+                    
+                        # Get semantic results for variation
+                        var_embedding = self.get_embedding(variation)
+                        var_semantic_response = self.supabase.match_documents_by_embedding_filtered(
+                            embedding=var_embedding,
+                            filtered_ids=filtered_ids,
+                            limit=limit * 2
+                        )
+                    
+                        if var_semantic_response.data:
+                            print(f"📊 Found {len(var_semantic_response.data)} semantic matches")
+                            self._normalize_scores(var_semantic_response.data, 'similarity')
+                            for doc in var_semantic_response.data:
+                                if doc['chunk_id'] in all_results:
+                                    if doc.get('normalized_similarity', 0) > all_results[doc['chunk_id']].get('normalized_semantic', 0):
+                                        all_results[doc['chunk_id']]['normalized_semantic'] = doc.get('normalized_similarity', 0)
+                                    if variation_key not in all_results[doc['chunk_id']]['found_in']:
+                                        all_results[doc['chunk_id']]['found_in'].append(variation_key)
+                                else:
+                                    doc['normalized_semantic'] = doc.get('normalized_similarity', 0)
+                                    doc['normalized_keyword'] = 0
+                                    doc['found_in'] = [variation_key]
+                                    all_results[doc['chunk_id']] = doc
+                    
+                        # Get keyword results for variation
+                        var_keyword_response = self.supabase.match_documents_by_text_filtered(
+                            query=variation,
+                            filtered_ids=filtered_ids,
+                            limit=limit * 2
+                        )
+                    
+                        if var_keyword_response.data:
+                            print(f"📊 Found {len(var_keyword_response.data)} keyword matches")
+                            self._normalize_scores(var_keyword_response.data, 'rank')
+                            for doc in var_keyword_response.data:
+                                if doc['chunk_id'] in all_results:
+                                    if doc.get('normalized_rank', 0) > all_results[doc['chunk_id']].get('normalized_keyword', 0):
+                                        all_results[doc['chunk_id']]['normalized_keyword'] = doc.get('normalized_rank', 0)
+                                    if variation_key not in all_results[doc['chunk_id']]['found_in']:
+                                        all_results[doc['chunk_id']]['found_in'].append(variation_key)
+                                else:
+                                    doc['normalized_keyword'] = doc.get('normalized_rank', 0)
+                                    doc['normalized_semantic'] = 0
+                                    doc['found_in'] = [variation_key]
+                                    all_results[doc['chunk_id']] = doc
 
                 # Calculate combined scores and add debug factors
                 for doc in all_results.values():
@@ -403,8 +487,8 @@ class SearchServiceSingle:
                 results_list = list(all_results.values())
                 results_list.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
 
-                # Print final results debug info
-                print(f"\n🔄 Final Results After All Variations:")
+                # Print results summary
+                print(f"\n🔄 Final Results:")
                 print(f"📊 Total unique documents: {len(results_list)}")
                 for idx, doc in enumerate(results_list[:5], 1):
                     print(f"\n=== Result {idx} ===")
@@ -412,15 +496,47 @@ class SearchServiceSingle:
                     print(f"Combined Score: {doc['combined_score']:.3f}")
                     print("---")
 
-                # Store results
+                # Setup debug directory with absolute path
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                debug_dir = os.path.join(current_dir, "..", "..", "debug", "rerank")
+                os.makedirs(debug_dir, exist_ok=True)
+                
+                # Create markdown directory
+                md_dir = os.path.join(debug_dir, "markdown")
+                os.makedirs(md_dir, exist_ok=True)
+                
+                # Use request timestamp if provided, otherwise generate new one
+                timestamp = request_timestamp or datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                # Generate markdown file for this subquestion
+                md_content = f"# Search Results for: {question}\n\n"
+                md_content += f"Keywords: {', '.join(keywords) if keywords else 'None'}\n\n"
+                
+                # Add variations section if there are any
+                if variations:
+                    md_content += f"## Variations\n"
+                    for i, variation in enumerate(variations, 1):
+                        md_content += f"{i}. {variation}\n"
+                    md_content += "\n"
+                
+                for idx, doc in enumerate(results_list[:5], 1):
+                    # Format result using format_service
+                    formatted_result = format_result_to_md(doc)
+                    md_content += f"\n{formatted_result}\n"
+
+                # Save markdown file for this subquestion
+                subq_suffix = f"_subquestion_{subquestion_number}" if subquestion_number is not None else ""
+                md_file = os.path.join(md_dir, f"results_{timestamp}{subq_suffix}.md")
+                with open(md_file, "w", encoding="utf-8") as f:
+                    f.write(md_content)
+                print(f"\n📝 Markdown results saved to: {md_file}")
+
+                # Format results for return
                 structured_results = {
                     "semantic_search_results": results_list[:limit],
-                    "keyword_search_results": results_list[:limit]
+                    "keyword_search_results": results_list[:limit],
+                    "markdown_file": md_file
                 }
-
-                # Create debug files
-                query_info['question'] = question
-                self.debug_service.create_search_debug_file(structured_results, query_info)
                 
                 return structured_results
 
@@ -755,14 +871,18 @@ class SearchServiceSingle:
             print(f"\n🔍 Getting keyword matches for filtering")
             all_filtered_ids = set()
             
-            # Start with primary query
-            keyword_response = self.supabase.match_documents_by_text(
-                " ".join(keywords),
-                limit=10000  # Get a large initial set
-            )
-            if keyword_response.data:
-                all_filtered_ids.update(doc['chunk_id'] for doc in keyword_response.data)
-                print(f"📊 Found {len(keyword_response.data)} matches from primary query")
+            # Buscar documentos para cada keyword individualmente
+            for keyword in keywords:
+                print(f"\n🔍 Searching for keyword: {keyword}")
+                keyword_response = self.supabase.match_documents_by_text(
+                    keyword,
+                    limit=10000  # Get a large initial set
+                )
+                if keyword_response.data:
+                    new_ids = set(doc['chunk_id'] for doc in keyword_response.data)
+                    new_matches = len(new_ids - all_filtered_ids)
+                    all_filtered_ids.update(new_ids)
+                    print(f"📊 Found {new_matches} new matches for keyword '{keyword}'")
             
             # Then process variations if any
             if variations:
@@ -770,7 +890,7 @@ class SearchServiceSingle:
                     if query and query != question:  # Skip if empty or same as primary
                         print(f"\n🔄 Getting keyword matches for variation: '{query}'")
                         var_keyword_response = self.supabase.match_documents_by_text(
-                            " ".join(keywords),
+                            query,
                             limit=10000
                         )
                         if var_keyword_response.data:
@@ -956,8 +1076,8 @@ class SearchServiceSingle:
                 "semantic_search_results": results_list[:limit],
                 "keyword_search_results": results_list[:limit],
                 "markdown_file": md_file
-                    }
-                
+            }
+            
             return structured_results
 
         except Exception as e:

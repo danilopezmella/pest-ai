@@ -2,62 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales */
-.text-shadow-glow {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-/* Terminal effects */
-@keyframes scan {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-
-@keyframes flicker {
-  0% { opacity: 0.1; }
-  5% { opacity: 0.2; }
-  10% { opacity: 0.1; }
-  15% { opacity: 0.3; }
-  20% { opacity: 0.1; }
-  25% { opacity: 0.2; }
-  30% { opacity: 0.1; }
-  35% { opacity: 0.3; }
-  40% { opacity: 0.1; }
-  45% { opacity: 0.2; }
-  50% { opacity: 0.1; }
-  55% { opacity: 0.2; }
-  60% { opacity: 0.3; }
-  65% { opacity: 0.1; }
-  70% { opacity: 0.2; }
-  75% { opacity: 0.1; }
-  80% { opacity: 0.3; }
-  85% { opacity: 0.1; }
-  90% { opacity: 0.2; }
-  95% { opacity: 0.1; }
-  100% { opacity: 0.2; }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.animate-scan {
-  animation: scan 2s linear infinite;
-}
-
-.animate-flicker {
-  animation: flicker 0.3s infinite;
-}
-
-.animate-cursor {
-  animation: blink 1s step-end infinite;
-}
-
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 12px;

@@ -949,8 +949,8 @@ async def generate_custom_response_stream(request: Request):
                         question=current_question,
                         keywords=keywords,
                         variations=variations,
-                        limit=5,
-                        alpha=0.3,
+                        limit=10,
+                        alpha=0.5,
                         subquestion_number=i,
                         request_timestamp=timestamp
                     )
@@ -961,7 +961,7 @@ async def generate_custom_response_stream(request: Request):
                 
                 # Generar respuesta usando los archivos markdown
                 response_service = ResponseService()
-                async for chunk in response_service.generate_streaming_response_multi_rerank(
+                async for chunk in response_service.generate_streaming_response_multi_rerank_geminy(
                     markdown_files=markdown_files,
                     question=question,
                     subquestions=subquestions
@@ -975,6 +975,109 @@ async def generate_custom_response_stream(request: Request):
         return StreamingResponse(
             generate(),
             media_type="text/plain"  # Cambiado a text/plain
+        )
+        
+    except Exception as e:
+        error_msg = f"Error processing request: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        raise HTTPException(status_code=500, detail=error_msg)
+
+@router.post("/generate_gemini_response_stream")
+async def generate_gemini_response_stream(request: Request):
+    """
+    Endpoint para generar respuestas usando Gemini API con streaming.
+    """
+    try:
+        # Obtener el cuerpo de la solicitud
+        body = await request.json()
+        question = body.get("question", "")
+        
+        if not question:
+            raise HTTPException(status_code=400, detail="Question is required")
+            
+        logger.info(f"📝 Received question for Gemini streaming: {question}")
+        
+        # Crear instancia del servicio de respuesta
+        response_service = ResponseService()
+        
+        async def generate():
+            try:
+                async for chunk in response_service.stream_gemini(question):
+                    yield chunk
+                    
+            except Exception as e:
+                logger.error(f"Error in generate function: {str(e)}", exc_info=True)
+                yield f"Error: {str(e)}"
+                
+        return StreamingResponse(
+            generate(),
+            media_type="text/plain"
+        )
+        
+    except Exception as e:
+        error_msg = f"Error processing request: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        raise HTTPException(status_code=500, detail=error_msg)
+
+@router.post("/search_gemini")
+async def search_gemini(request: Request):
+    """
+    Endpoint para búsqueda avanzada usando Gemini API con variaciones de la pregunta.
+    """
+    try:
+        # Obtener el cuerpo de la solicitud
+        body = await request.json()
+        question = body.get("question", "")
+        
+        if not question:
+            raise HTTPException(status_code=400, detail="Question is required")
+            
+        logger.info(f"📝 Received search question: {question}")
+        
+        # Procesar la pregunta para obtener variaciones
+        question_data = await process_question(question)
+        main_question = question_data["subquestion1"]
+        variations = question_data["variations_subquestion1"]
+        
+        # Procesar la pregunta para obtener keywords
+        keywords = detect_keywords(main_question)
+        logger.info(f"🔑 Detected keywords: {keywords}")
+        logger.info(f"🔄 Generated variations: {variations}")
+        
+        # Realizar búsqueda avanzada usando SearchServiceSingle
+        search_service = SearchServiceSingle()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        search_results = search_service.hybrid_search_with_keywords_multi_rerank(
+            question=main_question,
+            keywords=keywords,
+            variations=variations,
+            limit=10,
+            alpha=0.5,
+            request_timestamp=timestamp
+        )
+        
+        # Usar el archivo markdown generado si existe
+        context = None
+        if "markdown_file" in search_results and os.path.exists(search_results["markdown_file"]):
+            with open(search_results["markdown_file"], 'r', encoding='utf-8') as f:
+                context = f.read()
+        
+        # Crear instancia del servicio de respuesta
+        response_service = ResponseService()
+        
+        async def generate():
+            try:
+                async for chunk in response_service.stream_gemini(question, context):
+                    yield chunk
+                    
+            except Exception as e:
+                logger.error(f"Error in generate function: {str(e)}", exc_info=True)
+                yield f"Error: {str(e)}"
+                
+        return StreamingResponse(
+            generate(),
+            media_type="text/plain"
         )
         
     except Exception as e:

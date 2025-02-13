@@ -17,7 +17,7 @@ export const ChatTest: React.FC = () => {
   const [messages, setMessages] = useState<{
     text: string, 
     isBot: boolean,
-    followUpQuestions?: string[]
+    followUpQuestions?: { question: string; source: { file: string; section: string; } }[]
   }[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -83,8 +83,31 @@ export const ChatTest: React.FC = () => {
   }, []); // Run once on component mount
 
   const cleanResponse = (text: string) => {
-    // First clean markdown and formatting
-    let cleanedText = text
+    // Extract follow-up questions if they exist in JSON format FIRST
+    const followUpQuestions: { question: string; source: { file: string; section: string; } }[] = [];
+    const jsonRegex = /```json\s*({[\s\S]*?})\s*```/;
+    const jsonMatch = text.match(jsonRegex);
+
+    // Remove the JSON block and its header from the text before other cleaning
+    let processedText = text;
+    if (jsonMatch) {
+      try {
+        const jsonData = JSON.parse(jsonMatch[1]);
+        if (jsonData.follow_up_questions && Array.isArray(jsonData.follow_up_questions)) {
+          followUpQuestions.push(...jsonData.follow_up_questions.map(q => ({
+            question: q.question,
+            source: q.source
+          })));
+        }
+        // Remove the JSON block and any preceding "Follow-up Questions:" header
+        processedText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
+      } catch (e) {
+        console.error('Error parsing follow-up questions JSON:', e);
+      }
+    }
+
+    // Then clean the remaining text
+    const cleanedText = processedText
       // Convert **text** to <strong>text</strong>, including numbers before the text
       .replace(/(\d+[.|)]?\s*)?\*\*(.*?)\*\*/g, '<strong>$1$2</strong>')
       // Convert markdown headers (# to #####) to strong until newline
@@ -110,35 +133,26 @@ export const ChatTest: React.FC = () => {
       .replace(/\n{3,}/g, '\n\n')
       // Remove any remaining bullet points or question marks at the start of lines
       .replace(/^[•❓🔹]\s+/gmu, '')
+      // Remove any remaining numbered sections at the start of lines
+      .replace(/^\d+\.\s+/gm, '')
       // Trim whitespace from start and end
       .trim();
-
-    // Then extract follow-up questions if they exist
-    const followUpRegex = /Follow-up questions?:(?:\s*(?:-|\*|•)\s*([^\n]+))+/gis;
-    const followUpMatch = cleanedText.match(followUpRegex);
-
-    const followUpQuestions: string[] = [];
-
-    if (followUpMatch) {
-      // Extract all questions using a simpler regex that matches any format
-      const questionRegex = /(?:^|\n)\s*(?:-|\*|•)\s*([^\n]+)/g;
-      const matches = followUpMatch[0].match(questionRegex);
-      
-      if (matches) {
-        followUpQuestions.push(...matches
-          .map(q => q.replace(/^[\s-*•]+/, '').trim())
-          .filter(q => q.length > 0 && !q.toLowerCase().includes('follow-up')));
-      }
-
-      // Remove the follow-up questions section from the cleaned text
-      cleanedText = cleanedText.replace(/Follow-up questions?:[\s\S]*?(?=\n\n|$)/gi, '').trim();
-    }
 
     return { cleanedText, followUpQuestions };
   };
 
   const handleStreamChunk = React.useCallback((text: string) => {
-    const { cleanedText } = cleanResponse(text);
+    // Eliminar cualquier bloque JSON completo y su encabezado
+    let cleanText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
+    
+    // Si hay un inicio de bloque JSON sin terminar, cortar ahí
+    const jsonStartIndex = cleanText.indexOf('**Follow-up Questions:**');
+    if (jsonStartIndex !== -1) {
+      cleanText = cleanText.slice(0, jsonStartIndex);
+    }
+    
+    // Limpiar y mostrar el texto
+    const { cleanedText } = cleanResponse(cleanText.trim());
     setStreamContent(cleanedText);
   }, []);
 
@@ -153,7 +167,7 @@ export const ChatTest: React.FC = () => {
     setShouldAutoScroll(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/search/generate_custom_response_stream`, {
+      const response = await fetch(`${API_BASE_URL}/api/search/search_gemini`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: messageInput }),
@@ -165,7 +179,6 @@ export const ChatTest: React.FC = () => {
       const decoder = new TextDecoder();
       let text = '';
 
-      // Change to thinking stage after 2 seconds
       const thinkingTimer = setTimeout(() => setThinkingStage('thinking'), 2000);
 
       while (true) {
@@ -173,7 +186,26 @@ export const ChatTest: React.FC = () => {
         
         if (done) {
           clearTimeout(thinkingTimer);
-          const { cleanedText, followUpQuestions } = cleanResponse(text);
+          
+          // Procesar el texto completo para extraer JSON y limpiar el contenido
+          const jsonRegex = /```json\s*({[\s\S]*?})\s*```/;
+          const jsonMatch = text.match(jsonRegex);
+          let followUpQuestions = [];
+          
+          if (jsonMatch) {
+            try {
+              const jsonData = JSON.parse(jsonMatch[1].trim());
+              if (jsonData.follow_up_questions && Array.isArray(jsonData.follow_up_questions)) {
+                followUpQuestions = jsonData.follow_up_questions;
+              }
+              // Eliminar el bloque JSON y su encabezado del texto
+              text = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
+            } catch (e) {
+              console.error('Error parsing follow-up questions JSON:', e);
+            }
+          }
+          
+          const { cleanedText } = cleanResponse(text);
           setMessages(prev => [...prev, { 
             text: cleanedText, 
             isBot: true,
@@ -398,10 +430,13 @@ export const ChatTest: React.FC = () => {
                           {msg.followUpQuestions.map((question, qIdx) => (
                             <button 
                               key={qIdx}
-                              onClick={() => setMessageInput(question)}
-                              className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors"
+                              onClick={() => setMessageInput(question.question)}
+                              className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-colors group"
                             >
-                              <div className="text-purple-400 text-sm">{question}</div>
+                              <div className="text-purple-400 text-sm group-hover:text-purple-300">{question.question}</div>
+                              <div className="text-xs text-gray-500 mt-1 group-hover:text-gray-400">
+                                Source: {question.source.section}
+                              </div>
                             </button>
                           ))}
                         </div>

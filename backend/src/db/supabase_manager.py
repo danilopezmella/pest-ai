@@ -88,7 +88,7 @@ class SupabaseManager:
                 }
             ).execute()
             
-            print(f"📊 Response status: {getattr(response, 'status_code', 'unknown')}")
+            # print(f"📊 Response status: {getattr(response, 'status_code', 'unknown')}")
             # Safely print truncated response data
             if hasattr(response, 'data') and response.data:
                 print("📊 Response data preview:")
