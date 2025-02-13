@@ -83,77 +83,114 @@ export const ChatTest: React.FC = () => {
   }, []); // Run once on component mount
 
   const cleanResponse = (text: string) => {
-    // Extract follow-up questions if they exist in JSON format FIRST
+    // Extract follow-up questions if they exist in the new format
     const followUpQuestions: { question: string; source: { file: string; section: string; } }[] = [];
-    const jsonRegex = /```json\s*({[\s\S]*?})\s*```/;
-    const jsonMatch = text.match(jsonRegex);
+    const questionsRegex = /Follow-up Questions:\s*((?:-[^\n]+\([^)]+\)\s*)+)/;
+    const questionsMatch = text.match(questionsRegex);
 
-    // Remove the JSON block and its header from the text before other cleaning
     let processedText = text;
-    if (jsonMatch) {
+    if (questionsMatch) {
       try {
-        const jsonData = JSON.parse(jsonMatch[1]);
-        if (jsonData.follow_up_questions && Array.isArray(jsonData.follow_up_questions)) {
-          followUpQuestions.push(...jsonData.follow_up_questions.map(q => ({
-            question: q.question,
-            source: q.source
-          })));
+        // Extract individual questions with their sources
+        const questionLines = questionsMatch[1].match(/-\s*([^(]+)\s*\(Source:\s*File:\s*([^,]+),\s*Section:\s*([^)]+)\)/g);
+        
+        if (questionLines) {
+          questionLines.forEach(line => {
+            const questionMatch = line.match(/-\s*([^(]+)\s*\(Source:\s*File:\s*([^,]+),\s*Section:\s*([^)]+)\)/);
+            if (questionMatch) {
+              followUpQuestions.push({
+                question: questionMatch[1].trim(),
+                source: {
+                  file: questionMatch[2].trim(),
+                  section: questionMatch[3].trim()
+                }
+              });
+            }
+          });
         }
-        // Remove the JSON block and any preceding "Follow-up Questions:" header
-        processedText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
+
+        // Remove the questions section from the text
+        processedText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?(?=\n\n|$)/, '');
       } catch (e) {
-        console.error('Error parsing follow-up questions JSON:', e);
+        console.error('Error parsing follow-up questions:', e);
       }
     }
 
-    // Then clean the remaining text
+    // Clean up any remaining markdown and extra whitespace
     const cleanedText = processedText
-      // Convert **text** to <strong>text</strong>, including numbers before the text
-      .replace(/(\d+[.|)]?\s*)?\*\*(.*?)\*\*/g, '<strong>$1$2</strong>')
-      // Convert markdown headers (# to #####) to strong until newline
-      .replace(/^#{1,5}\s*([^\n]+)/gm, '<strong>$1</strong>')
-      // Remove backticks and excessive whitespace around numbered items
-      .replace(/(\d+\.)\s*```\s*\n+\s*/g, '$1 ')
-      // Remove remaining backticks and empty lines around them
-      .replace(/\n*```\s*\n|\n```\s*\n*/g, '\n')
-      // Remove "Direct Answer First:" and similar variations
-      .replace(/^\*\*Direct Answer First:?\*\*\s*/gm, '')
-      .replace(/^Direct Answer First:?\s*/gm, '')
-      // Aggressively remove Question X/X and bullet points
-      .replace(/^[•❓🔹]\s*Question \d+\/\d+:?\s*/gmu, '')
-      .replace(/^Question \d+\/\d+:?\s*/gm, '')
-      .replace(/^[•❓🔹]\s*/gmu, '')
-      .replace(/^[•❓🔹]?\s*Question \d+\/\d+:?\s*/gmu, '')
-      .replace(/Question \d+\/\d+:?\s*/g, '')
-      // Remove separator lines with "Analysis Complete" or "Starting Multi-Question Analysis"
-      .replace(/^={2,}\s*(Analysis Complete|Starting Multi-Question Analysis|Moving to Question.*?|🔍.*?)?\s*={2,}$/gm, '')
-      // Remove pure separator lines (only = signs, possibly with spaces)
-      .replace(/^[=\s]+$/gm, '')
-      // Replace multiple consecutive newlines with double newlines
+      .replace(/\*\*/g, '')
+      .replace(/```[^`]*```/g, '')
       .replace(/\n{3,}/g, '\n\n')
-      // Remove any remaining bullet points or question marks at the start of lines
-      .replace(/^[•❓🔹]\s+/gmu, '')
-      // Remove any remaining numbered sections at the start of lines
-      .replace(/^\d+\.\s+/gm, '')
-      // Trim whitespace from start and end
       .trim();
 
-    return { cleanedText, followUpQuestions };
+    return {
+      cleanedText,
+      followUpQuestions
+    };
   };
 
   const handleStreamChunk = React.useCallback((text: string) => {
-    // Eliminar cualquier bloque JSON completo y su encabezado
-    let cleanText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
+    // Buscar el inicio y fin del bloque JSON
+    const jsonStartIndex = text.indexOf('```json');
+    const jsonEndIndex = text.indexOf('```', jsonStartIndex + 6);
     
-    // Si hay un inicio de bloque JSON sin terminar, cortar ahí
-    const jsonStartIndex = cleanText.indexOf('**Follow-up Questions:**');
-    if (jsonStartIndex !== -1) {
-      cleanText = cleanText.slice(0, jsonStartIndex);
+    // Si encontramos el inicio del JSON pero no el final, no procesar aún
+    if (jsonStartIndex !== -1 && jsonEndIndex === -1) {
+      // Solo procesar el texto hasta el inicio del JSON
+      const cleanText = text.slice(0, jsonStartIndex).trim();
+      const { cleanedText } = cleanResponse(cleanText);
+      setStreamContent(cleanedText);
+      return;
     }
     
-    // Limpiar y mostrar el texto
-    const { cleanedText } = cleanResponse(cleanText.trim());
-    setStreamContent(cleanedText);
+    // Si tenemos un bloque JSON completo
+    if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+      try {
+        // Extraer y procesar el JSON, limpiando espacios extra y caracteres no deseados
+        const jsonBlock = text.slice(jsonStartIndex + 6, jsonEndIndex)
+          .trim()
+          .replace(/^\s+|\s+$/g, '') // Eliminar espacios al inicio y final
+          .replace(/\n\s*/g, ''); // Eliminar saltos de línea y espacios después de ellos
+        
+        // Verificar que el JSON comienza y termina correctamente
+        if (!jsonBlock.startsWith('{') || !jsonBlock.endsWith('}')) {
+          throw new Error('Invalid JSON format');
+        }
+        
+        const jsonData = JSON.parse(jsonBlock);
+        
+        if (jsonData.follow_up_questions && Array.isArray(jsonData.follow_up_questions)) {
+          setMessages(prev => {
+            const newMessages = [...prev];
+            if (newMessages.length > 0) {
+              const lastMessage = newMessages[newMessages.length - 1];
+              lastMessage.followUpQuestions = jsonData.follow_up_questions;
+            }
+            return newMessages;
+          });
+        }
+        
+        // Limpiar el texto eliminando el bloque JSON y su encabezado
+        const beforeJson = text.slice(0, jsonStartIndex);
+        const afterJson = text.slice(jsonEndIndex + 3);
+        const cleanText = (beforeJson + afterJson)
+          .replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*\s*$/, '')
+          .trim();
+          
+        const { cleanedText } = cleanResponse(cleanText);
+        setStreamContent(cleanedText);
+      } catch (e) {
+        console.error('Error parsing follow-up questions JSON:', e);
+        // En caso de error, mostrar el texto sin el JSON
+        const cleanText = text.slice(0, jsonStartIndex).trim();
+        const { cleanedText } = cleanResponse(cleanText);
+        setStreamContent(cleanedText);
+      }
+    } else {
+      // Si no hay JSON, procesar todo el texto normalmente
+      const { cleanedText } = cleanResponse(text);
+      setStreamContent(cleanedText);
+    }
   }, []);
 
   const handleSendMessage = async () => {
@@ -179,6 +216,7 @@ export const ChatTest: React.FC = () => {
       const decoder = new TextDecoder();
       let text = '';
 
+      // Change to thinking stage after 2 seconds
       const thinkingTimer = setTimeout(() => setThinkingStage('thinking'), 2000);
 
       while (true) {
@@ -186,26 +224,7 @@ export const ChatTest: React.FC = () => {
         
         if (done) {
           clearTimeout(thinkingTimer);
-          
-          // Procesar el texto completo para extraer JSON y limpiar el contenido
-          const jsonRegex = /```json\s*({[\s\S]*?})\s*```/;
-          const jsonMatch = text.match(jsonRegex);
-          let followUpQuestions = [];
-          
-          if (jsonMatch) {
-            try {
-              const jsonData = JSON.parse(jsonMatch[1].trim());
-              if (jsonData.follow_up_questions && Array.isArray(jsonData.follow_up_questions)) {
-                followUpQuestions = jsonData.follow_up_questions;
-              }
-              // Eliminar el bloque JSON y su encabezado del texto
-              text = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?```json[\s\S]*?```/g, '');
-            } catch (e) {
-              console.error('Error parsing follow-up questions JSON:', e);
-            }
-          }
-          
-          const { cleanedText } = cleanResponse(text);
+          const { cleanedText, followUpQuestions } = cleanResponse(text);
           setMessages(prev => [...prev, { 
             text: cleanedText, 
             isBot: true,
@@ -468,7 +487,7 @@ export const ChatTest: React.FC = () => {
         {/* Input Area */}
         <div className={`${
           isIPhoneDevice 
-            ? 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#1e1e2f]/80 backdrop-blur-sm pb-20' 
+            ? 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#1e1e2f]/80 backdrop-blur-sm pb-5' 
             : 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-white/5 backdrop-blur-sm z-20'
         }`}>
           <div className={isIPhoneDevice ? 'px-4 pt-4' : 'flex justify-center'}>

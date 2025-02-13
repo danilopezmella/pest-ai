@@ -9,120 +9,96 @@ interface RetroTextProps {
 }
 
 export const RetroText: React.FC<RetroTextProps> = ({ words, className = '', onWordClick }) => {
-  // Añadir estado para la selección actual
-  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [visibleWords, setVisibleWords] = useState<Set<string>>(new Set());
 
-  // Procesar las líneas para convertirlas en un array de arrays de palabras
+  // Procesar las líneas
   const processedWords = words.map((line, lineIndex) => {
-    // Dividir la línea en palabras, preservando los caracteres especiales
+    // Manejar "* control data" como una unidad especial
+    if (lineIndex === 1) {
+      return {
+        line,
+        parts: [{
+          text: line,
+          isClickable: true,
+          canBlink: false
+        }]
+      };
+    }
+
+    // Para el resto de las líneas, dividir normalmente
     const parts = line.split(/(\s+)/g).filter(part => part.length > 0);
     return {
       line,
       parts: parts.map(part => ({ 
         text: part, 
-        visible: true,
-        canBlink: lineIndex >= 2,
         isClickable: lineIndex === 0 || // pcf es clickeable
-                    lineIndex === 1 || // línea del asterisco es clickeable
                     (lineIndex >= 2 && !part.match(/^\s+$/)), // resto de palabras clickeables excepto espacios
-        isControlDataLine: lineIndex === 1 // identificar si es parte de la línea "* control data"
+        canBlink: lineIndex >= 2 // Solo parpadean las líneas después de "* control data"
       }))
     };
   });
 
-  const [wordStates, setWordStates] = useState(processedWords);
-
+  // Efecto para el parpadeo
   useEffect(() => {
     const interval = setInterval(() => {
-      setWordStates(prev => {
-        const newStates = [...prev];
-        // Solo seleccionar líneas que pueden parpadear (desde la tercera en adelante)
-        const blinkableLines = newStates.slice(2);
-        if (blinkableLines.length === 0) return newStates;
-
-        // Seleccionar una línea aleatoria de las que pueden parpadear
-        const randomLineIndex = Math.floor(Math.random() * blinkableLines.length) + 2;
-        const line = newStates[randomLineIndex];
-        
-        // Seleccionar una palabra aleatoria de esa línea (excluyendo espacios y caracteres especiales)
-        const validParts = line.parts.filter(part => !part.text.match(/^\s+|\*$/) && part.canBlink);
-        if (validParts.length > 0) {
-          const randomPartIndex = Math.floor(Math.random() * validParts.length);
-          const targetIndex = line.parts.indexOf(validParts[randomPartIndex]);
-          
-          // Cambiar la visibilidad de la palabra seleccionada
-          line.parts[targetIndex] = {
-            ...line.parts[targetIndex],
-            visible: !line.parts[targetIndex].visible
-          };
-        }
-        
-        return newStates;
+      setVisibleWords(prev => {
+        const next = new Set(prev);
+        processedWords.forEach(line => {
+          line.parts.forEach(part => {
+            if (part.canBlink && part.text.trim() !== selectedWord) {
+              if (Math.random() < 0.1) { // 10% probabilidad de cambiar
+                if (next.has(part.text)) {
+                  next.delete(part.text);
+                } else {
+                  next.add(part.text);
+                }
+              }
+            }
+          });
+        });
+        return next;
       });
-    }, 200);
+    }, 100);
 
     return () => clearInterval(interval);
-  }, []);
-
-  // Efecto para restaurar la visibilidad después de un tiempo
-  useEffect(() => {
-    const restoreInterval = setInterval(() => {
-      setWordStates(prev => 
-        prev.map((line, lineIndex) => ({
-          ...line,
-          parts: line.parts.map(part => ({
-            ...part,
-            visible: true
-          }))
-        }))
-      );
-    }, 2000);
-
-    return () => clearInterval(restoreInterval);
-  }, []);
+  }, [selectedWord]);
 
   return (
     <div className={`space-y-1 font-mono ${className}`}>
-      {wordStates.map((line, lineIndex) => (
-        <div key={lineIndex} className="whitespace-pre flex flex-wrap items-center group">
-          {line.parts.map((part, partIndex) => (
-            <motion.span
-              key={`${lineIndex}-${partIndex}`}
-              initial={{ opacity: 1 }}
-              animate={{
-                opacity: part.visible ? 1 : 0.5,
-                scale: part.visible ? 1 : 0.98,
-              }}
-              transition={{
-                duration: 0.2,
-                ease: "easeInOut"
-              }}
-              className={`
-                transition-all duration-200
-                ${part.visible && part.canBlink
-                  ? 'text-white brightness-125 text-shadow-glow' 
-                  : 'text-[#C8C8C9]'}
-                ${part.isClickable ? 'cursor-pointer' : ''}
-                ${part.isControlDataLine 
-                  ? selectedText === '* control data' 
-                    ? 'text-pink-400' 
-                    : 'group-hover:text-pink-400 hover:text-pink-400' 
-                  : selectedText === part.text.trim() 
-                    ? 'text-pink-400' 
-                    : 'hover:text-pink-400'}
-              `}
-              onClick={() => {
-                if (part.isClickable && onWordClick) {
-                  // Si es parte de la línea de control data, seleccionar la línea completa
-                  const textToSelect = part.isControlDataLine ? '* control data' : part.text.trim();
-                  setSelectedText(textToSelect);
-                  onWordClick(textToSelect);
-                }
-              }}
-            >
-              {part.text}
-            </motion.span>
-          ))}
+      {processedWords.map((line, lineIndex) => (
+        <div key={lineIndex} className="whitespace-pre flex flex-wrap items-center">
+          {line.parts.map((part, partIndex) => {
+            const isSelected = part.text.trim() === selectedWord;
+            const isVisible = visibleWords.has(part.text) || !part.canBlink || isSelected;
+
+            return (
+              <motion.span
+                key={`${lineIndex}-${partIndex}`}
+                initial={{ opacity: 1 }}
+                animate={{ 
+                  opacity: isVisible ? 1 : 0.5,
+                  scale: isVisible ? 1 : 0.98
+                }}
+                transition={{ duration: 0.2 }}
+                className={`
+                  transition-colors duration-200
+                  ${part.isClickable ? 'cursor-pointer hover:text-pink-400' : ''}
+                  ${isSelected ? 'text-pink-400' : 'text-[#C8C8C9]'}
+                  ${isVisible ? 'brightness-125 text-shadow-glow' : ''}
+                `}
+                onClick={() => {
+                  if (part.isClickable && onWordClick) {
+                    const textToSelect = part.text.trim();
+                    setSelectedWord(textToSelect);
+                    onWordClick(textToSelect);
+                  }
+                }}
+              >
+                {part.text}
+              </motion.span>
+            );
+          })}
         </div>
       ))}
     </div>

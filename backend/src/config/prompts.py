@@ -249,28 +249,12 @@ Structure your response as follows:
    - Troubleshooting guidance
 
 4. **Follow-up Questions:**
-   After your main answer, provide exactly 2-3 follow-up questions in this format:
+   After your main answer, provide 2-3 follow-up questions in this format:
 
-   ```json
-   {{
-     "follow_up_questions": [
-       {{
-         "question": "Your first question here",
-         "source": {{
-           "file": "filename",
-           "section": "section header"
-         }}
-       }},
-       {{
-         "question": "Your second question here",
-         "source": {{
-           "file": "filename",
-           "section": "section header"
-         }}
-       }}
-     ]
-   }}
-   ```
+   Follow-up Questions:
+   - [Question text here] (Source: File: [filename], Section: [header])
+   - [Question text here] (Source: File: [filename], Section: [header])
+   - [Question text here] (Source: File: [filename], Section: [header])
 
    [INTERNAL TRACKING - NOT SHOWN TO USER]
    For each question, verify:

@@ -482,7 +482,6 @@ Please structure your synthesis as follows:
         """Generate a streaming response using markdown files as context with Gemini."""
         try:
             # Initialize Gemini client
-
             client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
             
             # Lista para acumular respuestas
@@ -558,6 +557,15 @@ Please structure your synthesis as follows:
                     print(f"⚠️ Error generating Gemini response: {str(e)}")
                     yield f"\nError generating response: {str(e)}"
                     continue
+                
+                # Delete the markdown file after we're done with it
+                try:
+                    os.remove(md_file)
+                    print(f"🗑️ Deleted markdown file: {md_file}")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete file {md_file}: {str(e)}")
+                
+                print(f"✅ Completed response for subquestion {idx}")
             
             # Add final synthesis if there are multiple questions
             if len(subquestions) > 1:
