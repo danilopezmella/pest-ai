@@ -25,6 +25,18 @@ const itemVariants = {
 export const PestD3Landing: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#13111C] text-white flex items-center justify-center relative overflow-hidden">
+      {/* Home navigation button */}
+      <Link 
+        to="/"
+        className="fixed top-4 left-4 p-3 rounded-lg hover:bg-white/5 transition-all z-30 group flex items-center gap-2"
+        title="Back to ModFlow AI"
+      >
+        <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+      </Link>
+
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#13111C] via-[#1A1625] to-[#241C35] opacity-95" />
 
@@ -110,7 +122,7 @@ export const PestD3Landing: React.FC = () => {
               </div>
               
               <a 
-                href="https://marketplace.visualstudio.com/items?itemName=pestd3code"
+                href="https://marketplace.visualstudio.com/items?itemName=DanielLopezMella.pestd3code"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full text-white font-semibold hover:from-purple-500 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/30 flex items-center gap-2"

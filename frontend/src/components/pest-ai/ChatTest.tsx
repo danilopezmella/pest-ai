@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { RetroText } from './RetroText';
+import { Link } from 'react-router-dom';
 
 // Use environment variable or fallback to localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -27,6 +28,7 @@ export const ChatTest: React.FC = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [textareaHeight, setTextareaHeight] = useState(52);
+  const [cursorVisible, setCursorVisible] = useState(true);
 
   const isNearBottom = () => {
     const container = messagesContainerRef.current;
@@ -82,49 +84,65 @@ export const ChatTest: React.FC = () => {
     }));
   }, []); // Run once on component mount
 
+  // Add cursor blink effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCursorVisible(prev => !prev);
+    }, 530); // Slightly faster than 1s for a more natural feel
+
+    return () => clearInterval(interval);
+  }, []);
+
   const cleanResponse = (text: string) => {
-    // Add debug logging
     console.log("Raw text:", text);
-    
-    const followUpQuestions: { question: string; source: { file: string; section: string; } }[] = [];
-    const questionsRegex = /Follow-up Questions:\s*((?:-[^\n]+\([^)]+\)\s*)+)/i; // Added 'i' flag
-    
-    const questionsMatch = text.match(questionsRegex);
-    console.log("Questions match:", questionsMatch); // Debug log
-    
-    let processedText = text;
-    if (questionsMatch) {
-      try {
-        const questionLines = questionsMatch[1].match(/-\s*([^(]+)\s*\(Source:\s*File:\s*([^,]+),\s*Section:\s*([^)]+)\)/g);
-        console.log("Question lines:", questionLines); // Debug log
+
+    const followUpQuestions: { question: string; source: { file: string; section: string } }[] = [];
+
+    // Primero, localizamos la sección de "Follow-up Questions"
+    const questionsSectionRegex = /Follow-up Questions:\s*([\s\S]+)/i;
+    const sectionMatch = text.match(questionsSectionRegex);
+
+    if (sectionMatch) {
+      // Separamos la sección en líneas y filtramos las que comienzan con un guión ("-")
+      const lines = sectionMatch[1].split('\n').filter(line => line.trim().startsWith('-'));
+
+      for (const line of lines) {
+        // Quitamos el guión y espacios iniciales
+        const trimmedLine = line.trim().substring(1).trim();
         
-        if (questionLines) {
-          questionLines.forEach(line => {
-            console.log("Processing line:", line); // Debug line
-            const questionMatch = line.match(/-\s*([^(]+)\s*\(Source:\s*File:\s*([^,]+),\s*Section:\s*([^)]+)\)/);
-            console.log("Question match:", questionMatch); // Debug match
-            
-            if (questionMatch) {
-              followUpQuestions.push({
-                question: questionMatch[1].trim(),
-                source: {
-                  file: questionMatch[2].trim(),
-                  section: questionMatch[3].trim()
-                }
-              });
+        // Buscamos la posición de "(Source:" para separar la pregunta de la fuente
+        const sourceStart = trimmedLine.indexOf('(Source:');
+        if (sourceStart === -1) continue; // si no se encuentra, pasamos a la siguiente línea
+        
+        const questionText = trimmedLine.substring(0, sourceStart).trim();
+        const sourceText = trimmedLine.substring(sourceStart);
+
+        // Usamos un regex para extraer el nombre del archivo y la sección de la fuente.
+        // Este patrón captura todo hasta la coma antes de "Section:" de forma no codiciosa.
+        const sourceRegex = /\(Source:\s*File:\s*([\s\S]+?),\s*Section:\s*([^)]+)\)/;
+        const sourceMatch = sourceText.match(sourceRegex);
+        if (sourceMatch) {
+          followUpQuestions.push({
+            question: questionText,
+            source: {
+              file: sourceMatch[1].trim(),
+              section: sourceMatch[2].trim()
             }
           });
+        } else {
+          console.warn("No se pudo parsear la fuente en la línea:", line);
         }
-        
-        // Remove the questions section from the text
-        processedText = text.replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*[\s\S]*?(?=\n\n|$)/, '');
-      } catch (e) {
-        console.error('Error parsing follow-up questions:', e);
-        console.log('Text that caused error:', text); // Debug error
       }
     }
 
-    // Clean up any remaining markdown and extra whitespace
+    // Removemos el bloque de "Follow-up Questions" del texto original
+    const processedText = text
+      // Eliminamos cualquier "4." que aparezca antes de "Follow-up Questions"
+      .replace(/\b4\.\s*(Follow-up Questions:)/i, '$1')
+      // Luego eliminamos el bloque de preguntas
+      .replace(/Follow-up Questions:\s*([\s\S]+)/i, '');
+
+    // Limpieza final del texto
     const cleanedText = processedText
       .replace(/\*\*/g, '')
       .replace(/```[^`]*```/g, '')
@@ -136,6 +154,8 @@ export const ChatTest: React.FC = () => {
       followUpQuestions
     };
   };
+  
+
 
   const handleStreamChunk = React.useCallback((text: string) => {
     // Buscar el inicio y fin del bloque JSON
@@ -181,9 +201,7 @@ export const ChatTest: React.FC = () => {
         // Limpiar el texto eliminando el bloque JSON y su encabezado
         const beforeJson = text.slice(0, jsonStartIndex);
         const afterJson = text.slice(jsonEndIndex + 3);
-        const cleanText = (beforeJson + afterJson)
-          .replace(/(?:4\.)?\s*\*\*Follow-up Questions:\*\*\s*$/, '')
-          .trim();
+        const cleanText = (beforeJson + afterJson).trim();
           
         const { cleanedText } = cleanResponse(cleanText);
         setStreamContent(cleanedText);
@@ -290,18 +308,30 @@ export const ChatTest: React.FC = () => {
 
       {/* Main centered container */}
       <div className="w-[896px] flex flex-col relative z-10">
-        {/* Back button - Only show when there are messages */}
-        {messages.length > 0 && (
-          <button
-            onClick={() => setMessages([])}
-            className="fixed top-4 left-4 p-2 rounded-lg bg-black/20 hover:bg-black/30 text-white/70 hover:text-white transition-all z-30 backdrop-blur-sm"
-            aria-label="Back to terminal"
+        {/* Navigation buttons */}
+        <div className="fixed top-4 left-4 flex items-center gap-2 z-30">
+          {messages.length > 0 && (
+            <button
+              onClick={() => setMessages([])}
+              className="p-2 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-all"
+              aria-label="Clear chat"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+          <Link 
+            to="/"
+            className="p-3 rounded-lg hover:bg-white/5 transition-all group flex items-center gap-2"
+            title="Back to ModFlow AI"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-          </button>
-        )}
+            <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+          </Link>
+        </div>
 
         {/* Header - Hidden on iPhone */}
         {!isIPhoneDevice && (
@@ -383,7 +413,7 @@ export const ChatTest: React.FC = () => {
                       
                       <div className="text-teal-300 text-left flex items-center">
                         <span>C:\Users\gwm{`>`}</span>
-                        <span className="ml-0.5 text-teal-300 animate-[blink_1s_steps(1)_infinite]">|</span>
+                        <span className={`ml-0.5 text-teal-300 transition-opacity duration-0 ${cursorVisible ? 'opacity-100' : 'opacity-0'}`}>|</span>
                       </div>
                       <RetroText 
                         words={[

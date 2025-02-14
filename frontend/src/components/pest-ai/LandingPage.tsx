@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { RetroText } from './RetroText';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,6 +32,18 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1518] text-white flex items-center justify-center relative overflow-hidden">
+      {/* Home navigation button */}
+      <Link 
+        to="/"
+        className="fixed top-4 left-4 p-3 rounded-lg hover:bg-white/5 transition-all z-30 group flex items-center gap-2"
+        title="Back to ModFlow AI"
+      >
+        <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+      </Link>
+
       {/* Background gradient overlay - Más oscuro */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0d0f] via-[#0f1518] to-[#162024] opacity-95" />
 

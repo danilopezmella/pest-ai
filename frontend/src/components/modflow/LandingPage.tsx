@@ -51,10 +51,10 @@ export const ModFlowLanding: React.FC = () => {
               }}
             />
           </motion.div>
-          <h1 className="text-4xl lg:text-6xl font-bold mb-2">
+          <h1 className="text-4xl lg:text-6xl font-bold mb-2 text-white glow-effect">
             MODFLOW AI
           </h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-xl text-gray-400 pt-4">
             Computational Intelligence
           </p>
         </motion.div>
@@ -76,7 +76,7 @@ export const ModFlowLanding: React.FC = () => {
                     group-hover:drop-shadow-[0_0_15px_rgba(45,212,191,0.3)]"
                 />
                 <div className="transition-all duration-500 group-hover:opacity-100 opacity-70">
-                  <h3 className="text-xl font-semibold text-white group-hover:text-teal-300">PEST-AI</h3>
+                  <h3 className="text-xl font-extrabold text-white group-hover:text-teal-300">PEST-AI</h3>
                   <p className="text-gray-400">Documentation Assistant</p>
                 </div>
               </div>
@@ -92,13 +92,13 @@ export const ModFlowLanding: React.FC = () => {
               <div className="flex items-center gap-6">
                 <img 
                   src="/pestd3code/icon.png" 
-                  alt="PESTD3CODE" 
+                  alt="PestD3code" 
                   className="w-16 h-16 transition-all duration-500
                     group-hover:opacity-100 opacity-70
                     group-hover:drop-shadow-[0_0_15px_rgba(147,51,234,0.3)]"
                 />
                 <div className="transition-all duration-500 group-hover:opacity-100 opacity-70">
-                  <h3 className="text-xl font-semibold text-white group-hover:text-purple-300">PESTD3CODE</h3>
+                  <h3 className="text-xl font-extrabold text-white group-hover:text-purple-300">PestD3code</h3>
                   <p className="text-gray-400">VSCode Extension</p>
                 </div>
               </div>

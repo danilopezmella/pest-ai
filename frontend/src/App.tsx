@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ModFlowLanding } from './components/modflow/LandingPage';
-import { LandingPage as PestAILanding } from './components/LandingPage';
+import { LandingPage as PestAILanding } from './components/pest-ai/LandingPage';
 import { PestD3Landing } from './components/pestd3code/LandingPage';
-import { ChatTest } from './components/ChatTest';
+import { ChatTest } from './components/pest-ai/ChatTest';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
