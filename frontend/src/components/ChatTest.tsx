@@ -307,8 +307,8 @@ export const ChatTest: React.FC = () => {
         {!isIPhoneDevice && (
           <header className="fixed top-0 left-0 right-0 border-b border-white/10 bg-black/30 backdrop-blur-sm z-20">
             <div className="flex items-center justify-center h-20">
-              <div className="flex items-center gap-4">
-                <img src="/icon.png" alt="PEST-AI Logo" className="w-16 h-16 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]" />
+              <div className="flex items-center gap-4"> 
+                <img src="/pest-ai/icon.png" alt="PEST-AI Logo" className="w-16 h-16 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]" />
                 <div>
                   <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-teal-200 to-teal-400">PEST-AI</h1>
                   <p className="text-white/90 text-base">Your expert assistant for PEST documentation</p>
@@ -342,7 +342,7 @@ export const ChatTest: React.FC = () => {
                   <div className="text-sm text-white/70 mb-2">Popular questions:</div>
                   <button 
                     onClick={() => setMessageInput("What is PEST?")}
-                    className="w-full text-left px-4 py-3 rounded-xl bg-black/40 hover:bg-black/50 backdrop-blur-sm border border-white/10 transition-colors focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/25 outline-none"
+                    className="w-full text-left px-4 py-3 rounded-xl bg-black/40 hover:bg-black/50 backdrop-blur-sm border border-white/10 transition-colors"
                   >
                     <div className="text-teal-300 font-medium">What is PEST?</div>
                     <div className="text-sm text-white/70 mt-1">Learn about PEST's core functionality and purpose</div>
@@ -381,9 +381,9 @@ export const ChatTest: React.FC = () => {
                       {/* CRT flicker */}
                       <div className="absolute inset-0 pointer-events-none bg-white/[0.01] animate-flicker" />
                       
-                      <div className="text-left flex items-center">
-                        <span className="text-cyan-200">C:\Users\gwm{`>`}</span>
-                        <span className="ml-0.5 text-teal-300 animate-[blink_0.8s_step-end_infinite]">|</span>
+                      <div className="text-teal-300 text-left flex items-center">
+                        <span>C:\Users\gwm{`>`}</span>
+                        <span className="ml-0.5 text-teal-300 animate-[blink_1s_steps(1)_infinite]">|</span>
                       </div>
                       <RetroText 
                         words={[
@@ -398,7 +398,7 @@ export const ChatTest: React.FC = () => {
                           "NOPTMAX PHIREDSTP NPHISTP NPHINORED RELPARSTP NRELPAR",
                           "ICOV ICOR IEIG"
                         ]}
-                        className="flex flex-col items-start [&>*:hover]:text-teal-300 [&>*]:transition-colors [&>*]:duration-150 [&>*]:cursor-pointer [&>*]:text-white/70"
+                        className="flex flex-col items-start"
                         onWordClick={(word) => setMessageInput(`What is ${word}?`)}
                       />
                     </div>

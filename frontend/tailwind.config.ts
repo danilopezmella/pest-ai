@@ -50,7 +50,7 @@ export default {
         card: {
           DEFAULT: "#222222",
           foreground: "#FFFFFF",
-        },
+        }
       },
       borderRadius: {
         lg: "0.75rem",

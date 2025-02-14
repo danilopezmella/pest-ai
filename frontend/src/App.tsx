@@ -1,26 +1,39 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ModFlowLanding } from './components/modflow/LandingPage';
+import { LandingPage as PestAILanding } from './components/LandingPage';
+import { PestD3Landing } from './components/pestd3code/LandingPage';
+import { ChatTest } from './components/ChatTest';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
 import './App.css'
 
 const queryClient = new QueryClient();
 
-const App = () => {
+export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen bg-[#1e2330]">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-            </Routes>
-          </BrowserRouter>
+        <Router>
+          <Routes>
+            {/* Ruta principal - ModFlow AI Landing */}
+            <Route path="/" element={<ModFlowLanding />} />
+            
+            {/* PEST-AI Routes */}
+            <Route path="/pest-ai" element={<PestAILanding />} />
+            <Route path="/pest-ai/chat" element={<ChatTest />} />
+            
+            {/* PESTD3CODE Routes */}
+            <Route path="/pestd3code" element={<PestD3Landing />} />
+            
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
           <Toaster />
           <Sonner />
-        </div>
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );

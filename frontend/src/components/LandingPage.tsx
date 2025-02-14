@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,7 +22,13 @@ const itemVariants = {
   }
 };
 
-export const LandingPage: React.FC<{ onStartChat: () => void }> = ({ onStartChat }) => {
+export const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleStartChat = () => {
+    navigate('/pest-ai/chat');
+  };
+
   return (
     <div className="min-h-screen bg-[#0f1518] text-white flex items-center justify-center relative overflow-hidden">
       {/* Background gradient overlay - Más oscuro */}
@@ -42,11 +49,9 @@ export const LandingPage: React.FC<{ onStartChat: () => void }> = ({ onStartChat
             className="flex justify-center mb-4"
           >
             <motion.img 
-              src="/icon.png" 
+              src="/pest-ai/icon.png"
               alt="PEST-AI Logo" 
               className="w-20 h-20 lg:w-32 lg:h-32 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 300 }}
             />
           </motion.div>
 
@@ -109,7 +114,7 @@ export const LandingPage: React.FC<{ onStartChat: () => void }> = ({ onStartChat
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onStartChat}
+              onClick={handleStartChat}
               className="mt-4 px-6 py-3 bg-gradient-to-r from-teal-300 to-teal-600 rounded-full text-base lg:text-lg font-semibold hover:from-teal-400 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-teal-300/50 border border-white/20 text-white"
             >
               Start Exploring PEST

@@ -1,0 +1,13 @@
+.bg-gradient {
+  background: linear-gradient(180deg, #000 0%, #2a2a2a 100%);
+}
+
+@keyframes modflow-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.logo-pulse {
+  animation: modflow-pulse 3s infinite ease-in-out;
+} 
