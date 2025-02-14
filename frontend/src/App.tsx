@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ModFlowLanding } from './components/modflow/LandingPage';
 import { LandingPage as PestAILanding } from './components/pest-ai/LandingPage';
@@ -13,6 +13,10 @@ import './App.css'
 const queryClient = new QueryClient();
 
 export const App: React.FC = () => {
+  useEffect(() => {
+    document.title = "MODFLOW AI";
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

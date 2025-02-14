@@ -290,21 +290,9 @@ export const ChatTest: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1518] text-white flex justify-center font-sans antialiased relative overflow-hidden">
+    <div className="min-h-screen bg-[#1E1E1E] text-[#C0C0C0] flex justify-center font-sans antialiased relative overflow-hidden">
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0d0f] via-[#0f1518] to-[#162024] opacity-95" />
-
-      {/* Background watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <img 
-          src="/icon.png" 
-          alt="" 
-          className={`select-none opacity-[0.02] ${
-            isIPhoneDevice ? 'w-[20rem] h-[20rem]' : 'w-[40rem] h-[40rem]'
-          }`}
-          style={{ filter: 'grayscale(100%)' }}
-        />
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#121212] via-[#1E1E1E] to-[#242424] opacity-95" />
 
       {/* Main centered container */}
       <div className="w-[896px] flex flex-col relative z-10">
@@ -329,7 +317,9 @@ export const ChatTest: React.FC = () => {
             <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+            {!isIPhoneDevice && (
+              <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+            )}
           </Link>
         </div>
 
@@ -355,49 +345,49 @@ export const ChatTest: React.FC = () => {
         <div 
           ref={messagesContainerRef}
           onScroll={handleScroll}
-          className={`flex-grow overflow-y-auto ${
+          className={`flex-grow ${
             isIPhoneDevice ? 'h-[calc(100vh-20rem)]' : 'h-[calc(100vh-12.5rem)]'
           } scrollbar-thin scrollbar-thumb-teal-600/50 scrollbar-track-transparent`}
         >
-          <div className="px-4 py-4 space-y-4 min-h-full">
+          <div className="px-4 py-4 min-h-full flex flex-col">
             {messages.length === 0 && !isLoading && (
-              <div className="h-full flex flex-col items-center justify-center space-y-8">
+              <div className="flex-1 flex flex-col items-center justify-center space-y-8">
                 <div className="text-center space-y-2">
-                  <h2 className="text-xl font-semibold text-white">Welcome to PEST-AI Assistant</h2>
+                  <h2 className="text-xl font-semibold bg-gradient-to-r from-[#FFB86C] to-[#FFD700]/80 bg-clip-text text-transparent">Welcome to PEST-AI Assistant</h2>
                   <p className="text-white/80 text-sm">Ask me anything about PEST software and documentation</p>
                 </div>
                 
                 {/* Popular questions */}
                 <div className="w-full max-w-lg">
-                  <div className="text-sm text-white/70 mb-2">Popular questions:</div>
+                  <div className="text-sm bg-gradient-to-r from-[#FFB86C] to-[#FFD700]/80 bg-clip-text text-transparent font-medium mb-2">Popular questions:</div>
                   <button 
                     onClick={() => setMessageInput("What is PEST?")}
-                    className="w-full text-left px-4 py-3 rounded-xl bg-black/40 hover:bg-black/50 backdrop-blur-sm border border-white/10 transition-colors"
+                    className="w-full text-left px-4 py-3 rounded-xl bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] backdrop-blur-sm border border-white/10 hover:border-[#3CE0DB]/50 focus:border-[#3CE0DB]/50 focus:ring-1 focus:ring-[#3CE0DB]/25 outline-none transition-all duration-200"
                   >
-                    <div className="text-teal-300 font-medium">What is PEST?</div>
-                    <div className="text-sm text-white/70 mt-1">Learn about PEST's core functionality and purpose</div>
+                    <div className="text-[#3CE0DB] font-medium">What is PEST?</div>
+                    <div className="text-sm text-[#888888] mt-1">Learn about PEST's core functionality and purpose</div>
                   </button>
                 </div>
                 
                 {/* Terminal section */}
                 <div className="w-full max-w-lg">
-                  <div className="text-sm text-white/70 mb-2">Why don't you try a keyword?</div>
-                  <div className="bg-black/60 backdrop-blur-sm rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+                  <div className="text-sm bg-gradient-to-r from-[#FFB86C] to-[#FFD700]/80 bg-clip-text text-transparent font-medium mb-2">Why don't you try a keyword?</div>
+                  <div className="bg-[#1A1A1A]/90 backdrop-blur-sm rounded-xl border border-[#3CE0DB]/10 shadow-2xl overflow-hidden">
                     {/* Terminal header */}
-                    <div className="bg-black/50 px-2 py-1.5 flex items-center justify-end">
+                    <div className="bg-[#1A1A1A] px-2 py-1.5 flex items-center justify-end border-b border-[#3CE0DB]/10">
                       <div className="flex gap-0.5">
-                        <button className="w-8 h-5 flex items-center justify-center hover:bg-white/5">
-                          <svg className="w-3 h-3 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-[#3CE0DB]/5">
+                          <svg className="w-3 h-3 text-[#888888]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4"/>
                           </svg>
                         </button>
-                        <button className="w-8 h-5 flex items-center justify-center hover:bg-white/5">
-                          <svg className="w-2.5 h-2.5 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-[#3CE0DB]/5">
+                          <svg className="w-2.5 h-2.5 text-[#888888]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <rect x="4" y="4" width="16" height="16" rx="1"/>
                           </svg>
                         </button>
-                        <button className="w-8 h-5 flex items-center justify-center hover:bg-red-500">
-                          <svg className="w-3 h-3 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <button className="w-8 h-5 flex items-center justify-center hover:bg-red-500/20">
+                          <svg className="w-3 h-3 text-[#888888]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
                           </svg>
                         </button>
@@ -407,13 +397,13 @@ export const ChatTest: React.FC = () => {
                     {/* Terminal content */}
                     <div className="p-4 space-y-1 font-mono text-base relative text-left">
                       {/* Scanline effect */}
-                      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-teal-500/[0.02] to-transparent animate-scan" />
+                      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-[#3CE0DB]/[0.02] to-transparent animate-scan" />
                       {/* CRT flicker */}
                       <div className="absolute inset-0 pointer-events-none bg-white/[0.01] animate-flicker" />
                       
-                      <div className="text-teal-300 text-left flex items-center">
-                        <span>C:\Users\gwm{`>`}</span>
-                        <span className={`ml-0.5 text-teal-300 transition-opacity duration-0 ${cursorVisible ? 'opacity-100' : 'opacity-0'}`}>|</span>
+                      <div className="text-[#3CE0DB] text-left flex items-center">
+                        <span className="text-[#E6A959] italic">C:\Users\gwm{`>`}</span>
+                        <span className={`ml-0.5 text-[#FFB86C] transition-opacity duration-0 ${cursorVisible ? 'opacity-100' : 'opacity-0'}`}>|</span>
                       </div>
                       <RetroText 
                         words={[
@@ -428,7 +418,7 @@ export const ChatTest: React.FC = () => {
                           "NOPTMAX PHIREDSTP NPHISTP NPHINORED RELPARSTP NRELPAR",
                           "ICOV ICOR IEIG"
                         ]}
-                        className="flex flex-col items-start"
+                        className="flex flex-col items-start font-medium tracking-wide"
                         onWordClick={(word) => setMessageInput(`What is ${word}?`)}
                       />
                     </div>
@@ -441,9 +431,9 @@ export const ChatTest: React.FC = () => {
                 <div className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'} w-full`}>
                   <div className={`max-w-[95%] ${
                     msg.isBot 
-                      ? 'bg-black/40 backdrop-blur-sm rounded-2xl rounded-tl-sm text-white/90' 
-                      : 'bg-teal-600 rounded-2xl rounded-tr-sm'
-                  } px-6 py-4 shadow-lg border ${msg.isBot ? 'border-white/10' : 'border-teal-500/20'}`}>
+                      ? 'bg-[#1A1A1A]/80 backdrop-blur-sm rounded-2xl rounded-tl-sm text-[#C0C0C0]' 
+                      : 'bg-[#3CE0DB]/20 rounded-2xl rounded-tr-sm border-[#3CE0DB]/20'
+                  } px-6 py-4 shadow-lg border ${msg.isBot ? 'border-white/10' : 'border-[#3CE0DB]/20'}`}>
                     <pre className="text-left whitespace-pre-wrap break-words font-sans leading-relaxed text-[15px]"
                       dangerouslySetInnerHTML={{ __html: msg.text }}
                     />
@@ -456,7 +446,7 @@ export const ChatTest: React.FC = () => {
                     {/* Feedback buttons - Always show for bot messages */}
                     <div className="flex gap-2">
                       <button 
-                        className="text-sm px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 text-white/70 hover:text-white transition-colors"
+                        className="text-sm px-3 py-1 rounded-lg bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-[#888888] hover:text-[#C0C0C0] transition-colors"
                         onClick={() => console.log('Helpful')}
                       >
                         <span className="flex items-center gap-1">
@@ -467,7 +457,7 @@ export const ChatTest: React.FC = () => {
                         </span>
                       </button>
                       <button 
-                        className="text-sm px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 text-white/70 hover:text-white transition-colors"
+                        className="text-sm px-3 py-1 rounded-lg bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-[#888888] hover:text-[#C0C0C0] transition-colors"
                         onClick={() => console.log('Not helpful')}
                       >
                         <span className="flex items-center gap-1">
@@ -488,10 +478,10 @@ export const ChatTest: React.FC = () => {
                             <button 
                               key={qIdx}
                               onClick={() => setMessageInput(question.question)}
-                              className="text-left px-3 py-2 rounded-xl bg-black/40 hover:bg-black/50 backdrop-blur-sm border border-white/10 transition-colors group"
+                              className="text-left px-3 py-2 rounded-xl bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] backdrop-blur-sm border border-white/10 transition-colors group"
                             >
-                              <div className="text-teal-300 text-sm group-hover:text-teal-200">{question.question}</div>
-                              <div className="text-xs text-white/50 mt-1 group-hover:text-white/60">
+                              <div className="text-[#3CE0DB] text-sm group-hover:text-[#FFB86C]">{question.question}</div>
+                              <div className="text-xs text-[#888888] mt-1 group-hover:text-[#C0C0C0]">
                                 Source: {question.source.section}
                               </div>
                             </button>
@@ -539,7 +529,7 @@ export const ChatTest: React.FC = () => {
                   }}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about PEST..."
-                  className="w-full p-4 bg-black/40 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/25 outline-none font-sans text-[15px] text-white placeholder-white/40 absolute bottom-0 left-0 right-0 transition-all overflow-hidden"
+                  className="w-full p-4 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-[#3CE0DB]/50 focus:ring-1 focus:ring-[#3CE0DB]/25 outline-none font-sans text-[15px] text-[#C0C0C0] placeholder-[#888888] absolute bottom-0 left-0 right-0 transition-all overflow-hidden"
                   style={{ 
                     height: `${textareaHeight}px`,
                     transform: `translateY(${-(textareaHeight - 52)}px)`,
@@ -549,7 +539,7 @@ export const ChatTest: React.FC = () => {
                 <button
                   onClick={handleSendMessage}
                   disabled={isLoading || !messageInput.trim()}
-                  className="absolute right-3 bottom-1.5 p-2 text-teal-300 hover:text-teal-200 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                  className="absolute right-3 bottom-1.5 p-2 text-[#3CE0DB] hover:text-[#FFB86C] disabled:opacity-50 disabled:cursor-not-allowed z-10"
                 >
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M22 2L11 13" strokeLinecap="round" strokeLinejoin="round"/>
@@ -589,16 +579,6 @@ export const ChatTest: React.FC = () => {
           </svg>
         </button>
       )}
-
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2">
-          <div className="w-full h-full bg-gradient-to-br from-white/20 to-teal-700/30 rounded-full blur-3xl" />
-        </div>
-        <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2">
-          <div className="w-full h-full bg-gradient-to-tr from-teal-800/40 to-white/20 rounded-full blur-3xl" />
-        </div>
-      </div>
     </div>
   );
 }; 

@@ -31,21 +31,21 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1518] text-white flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#1E1E1E] text-[#C0C0C0] flex items-center justify-center relative overflow-hidden">
       {/* Home navigation button */}
       <Link 
         to="/"
-        className="fixed top-4 left-4 p-3 rounded-lg hover:bg-white/5 transition-all z-30 group flex items-center gap-2"
+        className="fixed top-4 left-4 p-3 rounded-lg hover:bg-[#1A1A1A]/80 transition-all z-30 group flex items-center gap-2"
         title="Back to ModFlow AI"
       >
-        <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <svg className="w-5 h-5 text-[#888888] group-hover:text-[#3CE0DB]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
-        <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
+        <span className="text-[#888888] group-hover:text-[#3CE0DB] font-medium">ModFlow AI</span>
       </Link>
 
-      {/* Background gradient overlay - Más oscuro */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0d0f] via-[#0f1518] to-[#162024] opacity-95" />
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#121212] via-[#1E1E1E] to-[#242424] opacity-95" />
 
       {/* Content container */}
       <motion.div 
@@ -64,36 +64,36 @@ export const LandingPage: React.FC = () => {
             <motion.img 
               src="/pest-ai/icon.png"
               alt="PEST-AI Logo" 
-              className="w-20 h-20 lg:w-32 lg:h-32 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]"
+              className="w-20 h-20 lg:w-32 lg:h-32 drop-shadow-[0_0_30px_rgba(60,224,219,0.4)]"
             />
           </motion.div>
 
-          {/* Title - Blanco más puro */}
+          {/* Title */}
           <motion.h1 
             variants={itemVariants}
-            className="text-3xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-teal-200 to-teal-400 mb-3"
+            className="text-3xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#3CE0DB] via-[#3CE0DB]/80 to-[#FFB86C]"
           >
             PEST-AI
           </motion.h1>
 
-          {/* Subtitle más brillante */}
+          {/* Subtitle */}
           <motion.p 
             variants={itemVariants}
-            className="text-lg lg:text-2xl text-white mb-6 max-w-2xl mx-auto"
+            className="text-lg lg:text-2xl text-[#C0C0C0] mb-6 max-w-2xl mx-auto"
           >
             Your intelligent documentation chat assistant
           </motion.p>
         </div>
 
-        {/* Feature box - Más oscuro con bordes más brillantes */}
+        {/* Feature box */}
         <motion.div
           variants={itemVariants}
-          className="w-full max-w-3xl bg-gradient-to-b from-black/40 to-[#0f1518]/60 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/10 shadow-black/50"
+          className="w-full max-w-3xl bg-[#1A1A1A]/80 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-[#3CE0DB]/10 shadow-[#3CE0DB]/5"
         >
           <div className="flex flex-col items-center text-center space-y-4">
-            {/* Icon con más contraste */}
+            {/* Icon */}
             <motion.div
-              className="w-16 h-16 bg-gradient-to-br from-teal-300 to-teal-800 text-white p-3 rounded-2xl shadow-lg shadow-black/50"
+              className="w-16 h-16 bg-gradient-to-br from-[#3CE0DB] to-[#3CE0DB]/30 text-white p-3 rounded-2xl shadow-lg shadow-[#3CE0DB]/20"
               whileHover={{ scale: 1.05, rotate: 3 }}
             >
               <svg 
@@ -111,24 +111,24 @@ export const LandingPage: React.FC = () => {
               </svg>
             </motion.div>
 
-            {/* Feature title blanco puro */}
-            <h2 className="text-xl font-semibold text-white">
+            {/* Feature title */}
+            <h2 className="text-xl font-semibold text-[#3CE0DB]">
               Interactive Documentation Chat
             </h2>
 
-            {/* Feature description con mayor contraste */}
-            <p className="text-white/90 max-w-2xl text-sm lg:text-base">
-              <strong className="text-teal-200">AI-powered search</strong> through PEST manuals using semantic understanding and BM25 technology.
+            {/* Feature description */}
+            <p className="text-[#C0C0C0] max-w-2xl text-sm lg:text-base">
+              <strong className="text-[#FFB86C]">AI-powered search</strong> through PEST manuals using semantic understanding and BM25 technology.
               Get accurate, technically-grounded answers leveraging chapter metadata and summaries.
             </p>
 
-            {/* CTA Button con más contraste */}
+            {/* CTA Button */}
             <motion.button
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartChat}
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-teal-300 to-teal-600 rounded-full text-base lg:text-lg font-semibold hover:from-teal-400 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-teal-300/50 border border-white/20 text-white"
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-[#3CE0DB] to-[#3CE0DB]/80 rounded-full text-base lg:text-lg font-semibold hover:from-[#3CE0DB] hover:to-[#FFB86C] transition-all duration-300 shadow-lg hover:shadow-[#3CE0DB]/30 border border-[#3CE0DB]/20 text-[#1E1E1E]"
             >
               Start Exploring PEST
             </motion.button>
@@ -136,7 +136,7 @@ export const LandingPage: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* Background decorations con más contraste */}
+      {/* Background decorations */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.5 }}
@@ -145,17 +145,17 @@ export const LandingPage: React.FC = () => {
       >
         {/* Top right glow */}
         <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2">
-          <div className="w-full h-full bg-gradient-to-br from-white/20 to-teal-700/30 rounded-full blur-3xl" />
+          <div className="w-full h-full bg-gradient-to-br from-[#3CE0DB]/20 to-[#3CE0DB]/5 rounded-full blur-3xl" />
         </div>
 
         {/* Bottom left glow */}
         <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2">
-          <div className="w-full h-full bg-gradient-to-tr from-teal-800/40 to-white/20 rounded-full blur-3xl" />
+          <div className="w-full h-full bg-gradient-to-tr from-[#FFB86C]/20 to-[#3CE0DB]/10 rounded-full blur-3xl" />
         </div>
 
         {/* Center subtle glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
-          <div className="w-full h-full bg-gradient-to-r from-teal-700/20 via-white/10 to-teal-700/20 rounded-full blur-3xl" />
+          <div className="w-full h-full bg-gradient-to-r from-[#3CE0DB]/10 via-[#FFB86C]/5 to-[#3CE0DB]/10 rounded-full blur-3xl" />
         </div>
       </motion.div>
     </div>
