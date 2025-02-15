@@ -1,7 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import './LandingPage.css';  // Importar el CSS
+
+// Utility functions to detect devices
+const isIPhone = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('iphone');
+};
+
+const isAndroid = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('android');
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -24,6 +36,12 @@ const itemVariants = {
 };
 
 export const ModFlowLanding: React.FC = () => {
+  usePageTitle('MODFLOW AI | Computational Intelligence', 'Advanced computational intelligence tools for groundwater modeling');
+  
+  const [isIPhoneDevice] = React.useState(isIPhone());
+  const [isAndroidDevice] = React.useState(isAndroid());
+  const shouldHideText = isIPhoneDevice || isAndroidDevice;
+
   return (
     <div className="min-h-screen text-white flex items-center justify-center relative overflow-hidden bg-gradient">
       {/* Content container */}
@@ -39,15 +57,16 @@ export const ModFlowLanding: React.FC = () => {
             <motion.img 
               src="/modflow/modflowai.png"
               alt="ModFlow AI" 
-              className="w-32 h-32 lg:w-48 lg:h-48 object-contain filter brightness-[2.5] mx-auto
-                drop-shadow-[0_0_40px_rgba(255,255,255,0.4)]
-                drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]
-                drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]
+              className={`w-32 h-32 lg:w-48 lg:h-48 object-contain filter brightness-[2.5] mx-auto
+                drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]
+                drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]
                 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]
-                logo-pulse"
+                drop-shadow-[0_0_3px_rgba(255,255,255,0.9)]
+                logo-pulse`}
               style={{ 
                 WebkitBackfaceVisibility: 'hidden',
-                backfaceVisibility: 'hidden'
+                backfaceVisibility: 'hidden',
+                willChange: 'filter, transform'
               }}
             />
           </motion.div>

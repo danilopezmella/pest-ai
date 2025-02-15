@@ -26,14 +26,14 @@ export const App: React.FC = () => {
             <Route path="/" element={<ModFlowLanding />} />
             
             {/* PEST-AI Routes */}
-            <Route path="/pest-ai" element={<PestAILanding />} />
-            <Route path="/pest-ai/chat" element={<ChatTest />} />
+            <Route path="/pest-ai/*" element={<PestAILanding />} />
+            <Route path="/pest-ai/chat/*" element={<ChatTest />} />
             
             {/* PESTD3CODE Routes */}
-            <Route path="/pestd3code" element={<PestD3Landing />} />
+            <Route path="/pestd3code/*" element={<PestD3Landing />} />
             
-            {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/" />} />
+            {/* Fallback route - Redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
           <Sonner />

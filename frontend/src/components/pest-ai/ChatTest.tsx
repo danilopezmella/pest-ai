@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { RetroText } from './RetroText';
 import { Link } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Use environment variable or fallback to localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -12,7 +13,15 @@ const isIPhone = () => {
   return userAgent.includes('iphone');
 };
 
+// Utility function to detect Android
+const isAndroid = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('android');
+};
+
 export const ChatTest: React.FC = () => {
+  usePageTitle('PEST-AI Chat | Documentation Assistant', 'Interactive chat assistant for PEST documentation');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<{
@@ -25,6 +34,8 @@ export const ChatTest: React.FC = () => {
   const [streamContent, setStreamContent] = useState('');
   const [thinkingStage, setThinkingStage] = useState<'searching' | 'thinking' | null>(null);
   const [isIPhoneDevice] = useState(isIPhone());
+  const [isAndroidDevice] = useState(isAndroid());
+  const shouldHideHeader = isIPhoneDevice || isAndroidDevice;
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [textareaHeight, setTextareaHeight] = useState(52);
@@ -98,28 +109,32 @@ export const ChatTest: React.FC = () => {
 
     const followUpQuestions: { question: string; source: { file: string; section: string } }[] = [];
 
-    // Primero, localizamos la sección de "Follow-up Questions"
-    const questionsSectionRegex = /Follow-up Questions:\s*([\s\S]+)/i;
-    const sectionMatch = text.match(questionsSectionRegex);
+    // Buscar la posición de inicio de la sección "Follow-up Questions"
+    const followUpHeader = /Follow-up Questions:/i;
+    const headerMatch = text.match(followUpHeader);
+    let questionsSection = "";
+    let beforeQuestions = text;
 
-    if (sectionMatch) {
-      // Separamos la sección en líneas y filtramos las que comienzan con un guión ("-")
-      const lines = sectionMatch[1].split('\n').filter(line => line.trim().startsWith('-'));
+    if (headerMatch) {
+      // Dividir el texto en dos partes: antes y después de la sección "Follow-up Questions"
+      const headerIndex = text.search(followUpHeader);
+      beforeQuestions = text.substring(0, headerIndex);
+      questionsSection = text.substring(headerIndex);
+    }
 
+    // Procesar la sección de Follow-up Questions si existe
+    if (questionsSection) {
+      // Extraer líneas que empiezan con guion
+      const lines = questionsSection.split('\n').filter(line => line.trim().startsWith('-'));
       for (const line of lines) {
-        // Quitamos el guión y espacios iniciales
         const trimmedLine = line.trim().substring(1).trim();
-        
-        // Buscamos la posición de "(Source:" para separar la pregunta de la fuente
         const sourceStart = trimmedLine.indexOf('(Source:');
-        if (sourceStart === -1) continue; // si no se encuentra, pasamos a la siguiente línea
-        
+        if (sourceStart === -1) continue;
+
         const questionText = trimmedLine.substring(0, sourceStart).trim();
         const sourceText = trimmedLine.substring(sourceStart);
-
-        // Usamos un regex para extraer el nombre del archivo y la sección de la fuente.
-        // Este patrón captura todo hasta la coma antes de "Section:" de forma no codiciosa.
-        const sourceRegex = /\(Source:\s*File:\s*([\s\S]+?),\s*Section:\s*([^)]+)\)/;
+        // Usar una regex configurable para extraer la información de la fuente
+        const sourceRegex = /\(Source:\s*File:\s*([\s\S]+?),\s*Section:\s*([^)]+)\)/i;
         const sourceMatch = sourceText.match(sourceRegex);
         if (sourceMatch) {
           followUpQuestions.push({
@@ -135,19 +150,16 @@ export const ChatTest: React.FC = () => {
       }
     }
 
-    // Removemos el bloque de "Follow-up Questions" del texto original
-    const processedText = text
-      // Eliminamos cualquier "4." que aparezca antes de "Follow-up Questions"
-      .replace(/\b4\.\s*(Follow-up Questions:)/i, '$1')
-      // Luego eliminamos el bloque de preguntas
-      .replace(/Follow-up Questions:\s*([\s\S]+)/i, '');
-
-    // Limpieza final del texto
-    const cleanedText = processedText
-      .replace(/\*\*/g, '')
-      .replace(/```[^`]*```/g, '')
-      .replace(/\n{3,}/g, '\n\n')
+    // Limpiar el texto "beforeQuestions" (la parte sin la sección de preguntas)
+    let cleanedText = beforeQuestions
+      .replace(/^\d+\.\s*/gm, '') // Eliminar números de lista al inicio de líneas
+      .replace(/```[^`]*```/g, '') // Eliminar bloques de código
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Convertir ** a etiquetas strong
+      .replace(/\n{3,}/g, '\n\n') // Reducir múltiples saltos de línea
       .trim();
+
+    // Eliminar el número solitario al final si existe
+    cleanedText = cleanedText.replace(/\n\s*\d+\.?\s*$/, '');
 
     return {
       cleanedText,
@@ -282,13 +294,6 @@ export const ChatTest: React.FC = () => {
     }
   };
 
-  const updateTextareaHeight = (element: HTMLTextAreaElement) => {
-    element.style.height = '52px'; // Reset height to recalculate
-    const scrollHeight = element.scrollHeight;
-    const newHeight = Math.min(scrollHeight, 200);
-    setTextareaHeight(newHeight);
-  };
-
   return (
     <div className="min-h-screen bg-[#1E1E1E] text-[#C0C0C0] flex justify-center font-sans antialiased relative overflow-hidden">
       {/* Background gradient overlay */}
@@ -317,21 +322,18 @@ export const ChatTest: React.FC = () => {
             <svg className="w-5 h-5 text-white/70 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            {!isIPhoneDevice && (
-              <span className="text-white/70 group-hover:text-white font-medium">ModFlow AI</span>
-            )}
           </Link>
         </div>
 
-        {/* Header - Hidden on iPhone */}
-        {!isIPhoneDevice && (
+        {/* Header - Hidden on mobile devices */}
+        {!shouldHideHeader && (
           <header className="fixed top-0 left-0 right-0 border-b border-white/10 bg-black/30 backdrop-blur-sm z-20">
             <div className="flex items-center justify-center h-20">
               <div className="flex items-center gap-4"> 
                 <img src="/pest-ai/icon.png" alt="PEST-AI Logo" className="w-16 h-16 drop-shadow-[0_0_30px_rgba(45,212,191,0.4)]" />
                 <div>
-                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-teal-200 to-teal-400">PEST-AI</h1>
-                  <p className="text-white/90 text-base">Your expert assistant for PEST documentation</p>
+                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-teal-200 to-teal-400">MODFLOW AI</h1>
+                  <p className="text-white/90 text-base">Advanced computational intelligence tools for groundwater modeling</p>
                 </div>
               </div>
             </div>
@@ -339,15 +341,14 @@ export const ChatTest: React.FC = () => {
         )}
 
         {/* Add padding to account for fixed header */}
-        {!isIPhoneDevice && <div className="h-20" />}
+        {!shouldHideHeader && <div className="h-20" />}
 
         {/* Messages Area */}
         <div 
           ref={messagesContainerRef}
           onScroll={handleScroll}
-          className={`flex-grow ${
-            isIPhoneDevice ? 'h-[calc(100vh-20rem)]' : 'h-[calc(100vh-12.5rem)]'
-          } scrollbar-thin scrollbar-thumb-teal-600/50 scrollbar-track-transparent`}
+          className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-teal-600/50 scrollbar-track-transparent"
+          style={{ height: 'calc(100vh - 12.5rem)' }}
         >
           <div className="px-4 py-4 min-h-full flex flex-col">
             {messages.length === 0 && !isLoading && (
@@ -431,10 +432,10 @@ export const ChatTest: React.FC = () => {
                 <div className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'} w-full`}>
                   <div className={`max-w-[95%] ${
                     msg.isBot 
-                      ? 'bg-[#1A1A1A]/80 backdrop-blur-sm rounded-2xl rounded-tl-sm text-[#C0C0C0]' 
+                      ? 'bg-black/40 backdrop-blur-sm rounded-2xl rounded-tl-sm text-white/90' 
                       : 'bg-[#3CE0DB]/20 rounded-2xl rounded-tr-sm border-[#3CE0DB]/20'
                   } px-6 py-4 shadow-lg border ${msg.isBot ? 'border-white/10' : 'border-[#3CE0DB]/20'}`}>
-                    <pre className="text-left whitespace-pre-wrap break-words font-sans leading-relaxed text-[15px]"
+                    <pre className="text-left whitespace-pre-wrap break-words font-sans leading-relaxed text-[15px] text-white"
                       dangerouslySetInnerHTML={{ __html: msg.text }}
                     />
                   </div>
@@ -515,33 +516,31 @@ export const ChatTest: React.FC = () => {
         {/* Input Area */}
         <div className={`${
           isIPhoneDevice 
-            ? 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#0f1518]/80 backdrop-blur-sm pb-5' 
+            ? 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#0f1518]/80 backdrop-blur-sm' 
             : 'fixed bottom-0 left-0 right-0 border-t border-white/10 bg-black/30 backdrop-blur-sm z-20'
         }`}>
-          <div className={isIPhoneDevice ? 'px-4 pt-4' : 'flex justify-center'}>
+          <div className={isIPhoneDevice ? 'px-4 pt-1' : 'flex justify-center'}>
             <div className={isIPhoneDevice ? '' : 'w-[896px] px-4 py-4'}>
-              <div className="relative h-[52px]">
+              <div className="relative">
                 <textarea
                   value={messageInput}
                   onChange={(e) => {
                     setMessageInput(e.target.value);
-                    updateTextareaHeight(e.target);
                   }}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about PEST..."
-                  className="w-full p-4 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-[#3CE0DB]/50 focus:ring-1 focus:ring-[#3CE0DB]/25 outline-none font-sans text-[15px] text-[#C0C0C0] placeholder-[#888888] absolute bottom-0 left-0 right-0 transition-all overflow-hidden"
+                  className="w-full p-5 pr-14 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-2xl resize-none border border-white/10 focus:border-[#3CE0DB]/50 focus:ring-1 focus:ring-[#3CE0DB]/25 outline-none font-sans text-[15px] text-[#C0C0C0] placeholder-[#888888] overflow-y-auto"
                   style={{ 
-                    height: `${textareaHeight}px`,
-                    transform: `translateY(${-(textareaHeight - 52)}px)`,
-                    overflowY: textareaHeight >= 200 ? 'auto' : 'hidden'
+                    height: isIPhoneDevice ? '64px' : '84px',
+                    minHeight: '64px'
                   }}
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={isLoading || !messageInput.trim()}
-                  className="absolute right-3 bottom-1.5 p-2 text-[#3CE0DB] hover:text-[#FFB86C] disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                  className="absolute right-4 top-2 p-2.5 text-[#3CE0DB] hover:text-[#FFB86C] disabled:opacity-50 disabled:cursor-not-allowed z-10"
                 >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M22 2L11 13" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M22 2L15 22L11 13L2 9L22 2Z" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>

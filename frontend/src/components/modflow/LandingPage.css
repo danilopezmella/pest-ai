@@ -3,13 +3,15 @@
 }
 
 @keyframes modflow-pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 
 .logo-pulse {
   animation: modflow-pulse 3s infinite ease-in-out;
+  transform-origin: center center;
+  transform-box: fill-box;
 }
 
 .glow-effect {

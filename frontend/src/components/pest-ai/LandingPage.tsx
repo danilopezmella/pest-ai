@@ -2,6 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { RetroText } from './RetroText';
+import { usePageTitle } from '@/hooks/usePageTitle';
+
+// Utility functions to detect devices
+const isIPhone = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('iphone');
+};
+
+const isAndroid = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('android');
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -24,14 +36,19 @@ const itemVariants = {
 };
 
 export const LandingPage: React.FC = () => {
+  usePageTitle('PEST-AI | Documentation Assistant', 'Your intelligent documentation chat assistant for PEST software');
+  
   const navigate = useNavigate();
+  const [isIPhoneDevice] = React.useState(isIPhone());
+  const [isAndroidDevice] = React.useState(isAndroid());
+  const shouldHideText = isIPhoneDevice || isAndroidDevice;
 
   const handleStartChat = () => {
     navigate('/pest-ai/chat');
   };
 
   return (
-    <div className="min-h-screen bg-[#1E1E1E] text-[#C0C0C0] flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#1E1E1E] text-[#C0C0C0] flex items-center justify-center relative overflow-y-auto">
       {/* Home navigation button */}
       <Link 
         to="/"
@@ -41,7 +58,9 @@ export const LandingPage: React.FC = () => {
         <svg className="w-5 h-5 text-[#888888] group-hover:text-[#3CE0DB]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
-        <span className="text-[#888888] group-hover:text-[#3CE0DB] font-medium">ModFlow AI</span>
+        {!shouldHideText && (
+          <span className="text-[#888888] group-hover:text-[#3CE0DB] font-medium">MODFLOW AI</span>
+        )}
       </Link>
 
       {/* Background gradient overlay */}
@@ -52,7 +71,7 @@ export const LandingPage: React.FC = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col items-center"
+        className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col items-center"
       >
         {/* Main branding */}
         <div className="text-center mb-6">
