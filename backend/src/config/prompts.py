@@ -248,7 +248,7 @@ Structure your response as follows:
    - Tips and tricks
    - Troubleshooting guidance
 
-4. **Follow-up Questions:**
+**Follow-up Questions:**
    After your main answer, provide 2-3 follow-up questions in this format:
 
    Follow-up Questions:

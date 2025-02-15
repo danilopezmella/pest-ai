@@ -155,6 +155,7 @@ export const ChatTest: React.FC = () => {
       .replace(/^\d+\.\s*/gm, '') // Eliminar números de lista al inicio de líneas
       .replace(/```[^`]*```/g, '') // Eliminar bloques de código
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Convertir ** a etiquetas strong
+      .replace(/\* {3}/g, '-  ') // Reemplazar "*   " con "-  "
       .replace(/\n{3,}/g, '\n\n') // Reducir múltiples saltos de línea
       .trim();
 
@@ -428,7 +429,7 @@ export const ChatTest: React.FC = () => {
               </div>
             )}
             {messages.map((msg, idx) => (
-              <div key={idx} className="space-y-3">
+              <div key={idx} className="space-y-3 py-2">
                 <div className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'} w-full`}>
                   <div className={`max-w-[95%] ${
                     msg.isBot 
